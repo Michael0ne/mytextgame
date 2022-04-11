@@ -1,0 +1,3 @@
+IntroText1=english
+IntroText2=english
+IntroText3=english
