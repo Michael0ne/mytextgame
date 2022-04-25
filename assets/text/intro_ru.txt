@@ -1,3 +1,0 @@
-IntroText1=русское
-IntroText2=русское
-IntroText3=русское

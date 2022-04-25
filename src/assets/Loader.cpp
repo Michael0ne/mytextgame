@@ -8,7 +8,8 @@ AssetLoader::AssetLoader()
     FilePath = nullptr;
     FilePtr = nullptr;
 
-    LinesInAssetFile = -1;
+    AuxInfo.LinesInAssetFile = -1;
+    AuxInfo.CommentsInAssetFile = -1;
 
     std::cout << "AssetLoader constructor!" << std::endl;
 }
@@ -23,13 +24,20 @@ AssetLoader::~AssetLoader()
 bool AssetLoader::ParseAssetData()
 {
     //  File is open.
-    //  Read data and put where it needs to go.
     char buffer[1024] = {};
-    LinesInAssetFile = -1;
+    AuxInfo.LinesInAssetFile = -1;
+    AuxInfo.CommentsInAssetFile = -1;
     while (fread_s(buffer, sizeof(buffer), sizeof(buffer), 1, FilePtr) != EOF)
     {
+        if (buffer[0] == '#')
+        {
+            AuxInfo.CommentsInAssetFile++;
+            AuxInfo.LinesInAssetFile++;
+            continue;
+        }
+
         std::cout << buffer << std::endl;
-        LinesInAssetFile++;
+        AuxInfo.LinesInAssetFile++;
     }
 
     return true;
@@ -63,15 +71,55 @@ bool AssetLoader::OpenAsset(const char* const path)
     if (FilePath)
         delete[] FilePath;
 
-    const size_t pathSize = strlen(path) + 1;
-    FilePath = new char[8 + pathSize];
-    if (!FilePath)
+    FilePtr = nullptr;
+
+    //  The asset path is relative to the specified asset type.
+    //  Check if it is so first.
+    const char* const assetTypeStrColonPos = strchr(path, ':');
+    if (!assetTypeStrColonPos)
         return false;
 
-    strcpy_s(FilePath, 9, ASSETS_BASE_DIR);
-    strcat_s(FilePath, pathSize + 8, path);
+    //  Record what asset type has been requested. Extension is not important.
+    char assetTypeStr[32] = {};
+    const size_t assetTypeStrLength = assetTypeStrColonPos - path;
+    const size_t assetPathStrLength = strlen(path) - assetTypeStrLength;
+    strncpy_s(assetTypeStr, assetTypeStrLength + 1, path, assetTypeStrLength);
+    AssetTypeHash = XXH64(assetTypeStr, assetTypeStrLength, NULL);
+    AssetType = (eAssetType)AssetTypeHash;
 
-    FilePtr = nullptr;
+    const char* assetTypeDirStrPtr = nullptr;
+    size_t assetTypeDirStrLength = 0;
+    switch (AssetType)
+    {
+    case eAssetType::TEXT:
+        assetTypeDirStrPtr = ASSET_TEXT_PREFIX;
+        assetTypeDirStrLength = assetTextPrefixLength;
+        break;
+    case eAssetType::GFX:
+        assetTypeDirStrPtr = ASSET_GFX_PREFIX;
+        assetTypeDirStrLength = assetGfxPrefixLength;
+        break;
+    case eAssetType::SOUND:
+        assetTypeDirStrPtr = ASSET_SOUND_PREFIX;
+        assetTypeDirStrLength = assetSoundPrefixLength;
+        break;
+    default:
+        return false;
+    }
+
+    //  Skip first slash if necessary.
+    if (assetTypeDirStrPtr[0] == '/' && ASSETS_BASE_DIR[assetsBaseDirLength - 1] == '/')
+    {
+        assetTypeDirStrPtr++;
+        assetTypeDirStrLength--;
+    }
+
+    //  Make full path for fopen.
+    const size_t FilePathStringLength = assetsBaseDirLength + assetTypeDirStrLength + assetPathStrLength + 1;
+    FilePath = new char[FilePathStringLength];
+    strcpy_s(FilePath, FilePathStringLength, ASSETS_BASE_DIR);
+    strcat_s(FilePath, FilePathStringLength, assetTypeDirStrPtr);
+    strcat_s(FilePath, FilePathStringLength, assetTypeStrColonPos + 1);
     FileOpenStatus = fopen_s(&FilePtr, FilePath, "r");
 
     if (FileOpenStatus)

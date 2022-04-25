@@ -1,15 +1,24 @@
 ﻿#include "MyTextGame.h"
 #include "Loader.h"
 
+static AssetLoader& alInst = AssetLoader::GetInstance();
+
+void InitGame()
+{
+    alInst.OpenAsset("text:intro.txt");
+    alInst.OpenAsset("text:menumain.txt");
+}
+
+void LoopGame()
+{
+    while (true)
+        _sleep(10);
+}
+
 int main(const int argc, const char** argv)
 {
-    AssetLoader& alInst = AssetLoader::GetInstance();
-
-    if (!alInst.OpenAsset("text/intro.txt"))
-    {
-        std::cout << "Failed to open asset file! Error:" << alInst.GetError() << std::endl;
-        return 1;
-    }
+    InitGame();
+    LoopGame();
 
     return 0;
 }

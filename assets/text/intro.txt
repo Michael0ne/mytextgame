@@ -1,3 +1,6 @@
-IntroText1=english
-IntroText2=english
-IntroText3=english
+# Black screen before menu appears.
+# Header and Footer are simply 2 lines.
+TitleHeader=My Test Game
+TitleFooter=created by Michael
+LegalFooter1=(c) 2022
+LegalFooter2=All rights reserved

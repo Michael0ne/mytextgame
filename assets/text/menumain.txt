@@ -1,0 +1,7 @@
+MenuHeader=My Test Game
+MenuOptionStart=Start
+MenuOptionLevelSelect=Select level
+MenuOptionDebug=DEBUG
+MenuOptionMultiPlayer=Multi Player
+MenuOptionSettings=Options
+MenuOptionQuit=Quit

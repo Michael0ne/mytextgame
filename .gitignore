@@ -5,6 +5,17 @@
 *.bak
 *[Bb]ackup/
 
+# CMake files & folders
+.cmake/
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+
+# Ninja
+.ninja_deps
+.ninja_log
+build.ninja
+
 # Windows bullsh**
 desktop.ini
 
@@ -33,6 +44,8 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Oo]ut/
+[Ll]ib/
+[Tt]esting/
 
 # Visual Studio 2015 cache/options directory
 .vs/
