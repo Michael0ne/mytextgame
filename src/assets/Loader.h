@@ -45,6 +45,7 @@ class AssetLoader
 
 public:
     const errno_t   GetError() const;
+    const eAssetType    GetAssetType() const;
 
     bool            OpenAsset(const char* const path);
     bool            CloseAsset();

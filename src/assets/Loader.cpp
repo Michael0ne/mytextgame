@@ -28,7 +28,7 @@ bool AssetLoader::ParseAssetData(AssetInterface* assetInterface)
     char buffer[1024] = {};
     AuxInfo.LinesInAssetFile = -1;
     AuxInfo.CommentsInAssetFile = -1;
-    //while (fread_s(buffer, sizeof(buffer), sizeof(buffer), 1, FilePtr) != EOF)
+
     while (std::fgets(buffer, sizeof(buffer), FilePtr))
     {
         if (buffer[0] == '#')
@@ -38,7 +38,7 @@ bool AssetLoader::ParseAssetData(AssetInterface* assetInterface)
             continue;
         }
 
-        std::cout << buffer;
+        //std::cout << buffer;
         AuxInfo.LinesInAssetFile++;
     }
 
@@ -62,6 +62,11 @@ bool AssetLoader::CloseAsset()
 const errno_t AssetLoader::GetError() const
 {
     return FileOpenStatus;
+}
+
+const eAssetType AssetLoader::GetAssetType() const
+{
+    return AssetType;
 }
 
 bool AssetLoader::OpenAsset(const char* const path)
@@ -125,7 +130,10 @@ bool AssetLoader::OpenAsset(const char* const path)
     FileOpenStatus = fopen_s(&FilePtr, FilePath, "r");
 
     if (FileOpenStatus)
+    {
+        std::cout << "OpenAsset(" << FilePath << "): FAILED!" << std::endl;
         return false;
+    }
 
     std::cout << "OpenAsset(" << FilePath << "): FilePtr = " << std::hex << FilePtr << std::endl;
 

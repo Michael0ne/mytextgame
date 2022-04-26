@@ -26,6 +26,9 @@ add_subdirectory("thirdparty/xxHash/cmake_unofficial/")
 
 target_sources(MyTextGame PRIVATE "src/MyTextGame.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/Loader.cpp")
+target_sources(MyTextGame PRIVATE "src/assets/TextAsset.cpp")
+target_sources(MyTextGame PRIVATE "src/assets/GfxAsset.cpp")
+target_sources(MyTextGame PRIVATE "src/assets/SoundAsset.cpp")
 
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 

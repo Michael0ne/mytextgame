@@ -5,7 +5,7 @@ class TextAsset : public AssetInterface
     std::unordered_map<XXH64_hash_t, std::string>   TextValues;
 
 public:
-    TextAsset();
+    TextAsset(const uint8_t* data);
 
     virtual         ~TextAsset();
     virtual void    ParseData(const uint8_t* data) override;
