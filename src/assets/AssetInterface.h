@@ -8,5 +8,5 @@ class AssetInterface
 
 public:
     virtual         ~AssetInterface();
-    virtual         ParseData(const uint8_t* data) = 0;
+    virtual void    ParseData(const uint8_t* data) = 0;
 };

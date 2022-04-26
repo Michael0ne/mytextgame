@@ -16,6 +16,8 @@ enum class eAssetType : uint64_t
     SOUND = 0x381b96c7a2ec1dff    //  Hash for "sound".
 };
 
+class AssetInterface;
+
 class AssetLoader
 {
     errno_t     FileOpenStatus;
@@ -32,11 +34,12 @@ class AssetLoader
     AuxilaryInformation     AuxInfo;
     eAssetType      AssetType;
     XXH64_hash_t    AssetTypeHash;
+    AssetInterface *AssetInterfaceRef;
 
     AssetLoader();
     ~AssetLoader();
 
-    bool        ParseAssetData();
+    bool        ParseAssetData(AssetInterface* assetinterface);
 
     static AssetLoader  Instance;
 

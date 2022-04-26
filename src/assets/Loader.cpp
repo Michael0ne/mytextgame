@@ -1,4 +1,5 @@
 #include "Loader.h"
+#include "AssetInterface.h"
 
 AssetLoader AssetLoader::Instance;
 
@@ -21,13 +22,14 @@ AssetLoader::~AssetLoader()
     std::cout << "AssetLoader destructor!" << std::endl;
 }
 
-bool AssetLoader::ParseAssetData()
+bool AssetLoader::ParseAssetData(AssetInterface* assetInterface)
 {
     //  File is open.
     char buffer[1024] = {};
     AuxInfo.LinesInAssetFile = -1;
     AuxInfo.CommentsInAssetFile = -1;
-    while (fread_s(buffer, sizeof(buffer), sizeof(buffer), 1, FilePtr) != EOF)
+    //while (fread_s(buffer, sizeof(buffer), sizeof(buffer), 1, FilePtr) != EOF)
+    while (std::fgets(buffer, sizeof(buffer), FilePtr))
     {
         if (buffer[0] == '#')
         {
@@ -36,7 +38,7 @@ bool AssetLoader::ParseAssetData()
             continue;
         }
 
-        std::cout << buffer << std::endl;
+        std::cout << buffer;
         AuxInfo.LinesInAssetFile++;
     }
 
@@ -127,7 +129,7 @@ bool AssetLoader::OpenAsset(const char* const path)
 
     std::cout << "OpenAsset(" << FilePath << "): FilePtr = " << std::hex << FilePtr << std::endl;
 
-    return ParseAssetData();
+    return ParseAssetData(AssetInterfaceRef);
 }
 
 AssetLoader& AssetLoader::GetInstance()
