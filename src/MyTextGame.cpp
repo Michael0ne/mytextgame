@@ -70,24 +70,7 @@ void UnInitGame()
 
 void LoopGame()
 {
-    auto timeStart = std::chrono::high_resolution_clock::now();
-    const std::chrono::duration<double> timeInterval(10.0);
-
-    while (true)
-    {
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(10ms);
-
-        const auto timeCurrent = std::chrono::high_resolution_clock::now();
-        if ((timeCurrent - timeStart) >= timeInterval)
-        {
-            std::cout << "10 seconds passed..." << std::endl;
-            timeStart = timeCurrent;
-
-            const std::string& title = AssetsList[0]->CastTo<TextAsset>().GetKeyValue("TitleHeader");
-            std::cout << title << std::endl;
-        }
-    }
+    TimerIntervalScoped timer((TimerDurationType)5.0, [](const TimerDurationType& duration) { std::cout << "Expected: 5s, Elapsed: " << duration << std::endl; });
 }
 
 int main(const int argc, const char** argv)

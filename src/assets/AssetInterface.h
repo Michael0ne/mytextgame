@@ -21,6 +21,6 @@ public:
     template <class C>
     inline C&       CastTo()
     {
-        return *(C*)this;
+        return static_cast<C&>(*this);
     }
 };

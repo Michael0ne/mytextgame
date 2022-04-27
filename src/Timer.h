@@ -19,6 +19,9 @@ protected:
     TimerDurationType   Duration;
 
     TimerEndCallback    Callback;
+
+    TimerInterface() {};
+    ~TimerInterface() {};
 };
 
 //  This implements 'scoped' timer.
@@ -91,9 +94,12 @@ private:
 
             if (TerminateThread)
                 return;
+
+            TimeEnd = std::chrono::high_resolution_clock::now();
+            if (TimeEnd - TimeStart >= duration)
+                break;
         }
 
-        TimeEnd = std::chrono::high_resolution_clock::now();
         Duration = TimeEnd - TimeStart;
 
         if (Callback)
@@ -120,7 +126,7 @@ public:
 //  This implements timer with a specified interval in milliseconds.
 //  Upon creation this creates a new thread that sleeps for specified time
 //  Once sleep time is exhausted the thread is terminated and callback (if it was set) is called with actual elapsed time being provided as it's argument.
-//  If timer goes out of scope before it was finished, the running waiting thread is not terminated and still gets executed until specified wait time runs out.
+//  If timer goes out of scope before it was finished, the caller thread is stalled until time runs out.
 struct TimerIntervalUnscoped : public TimerInterface
 {
 private:
@@ -129,7 +135,7 @@ private:
     void WaitingThread(const TimerDurationType duration)
     {
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(1ms);
+        std::this_thread::sleep_for(duration);
 
         TimeEnd = std::chrono::high_resolution_clock::now();
         Duration = TimeEnd - TimeStart;
@@ -145,5 +151,10 @@ public:
         Callback = callbackPtr;
 
         SleepingThread = std::thread(&TimerIntervalUnscoped::WaitingThread, this, duration);
+    }
+
+    ~TimerIntervalUnscoped()
+    {
+        SleepingThread.join();
     }
 };
