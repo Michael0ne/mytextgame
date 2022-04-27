@@ -34,6 +34,8 @@ target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
 target_link_libraries(MyTextGame PRIVATE "xxhash")
 
+set(CMAKE_BUILD_PARALLEL_LEVEL 4)
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MyTextGame PROPERTY CXX_STANDARD 20)
 endif()

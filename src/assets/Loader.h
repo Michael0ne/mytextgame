@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Generic.h"
 
 const char* const ASSETS_BASE_DIR = "./assets/";
@@ -21,17 +23,12 @@ class AssetInterface;
 class AssetLoader
 {
     errno_t     FileOpenStatus;
-    char       *FilePath;
+    std::string FilePath;
+    std::string FileName;
     FILE       *FilePtr;
+    uint8_t    *FileDataBuffer;
+    long        FileSize;
 
-    //  Whatever information is necessary for debugging purposes.
-    struct AuxilaryInformation
-    {
-        int32_t     LinesInAssetFile;
-        int32_t     CommentsInAssetFile;
-    };
-
-    AuxilaryInformation     AuxInfo;
     eAssetType      AssetType;
     XXH64_hash_t    AssetTypeHash;
     AssetInterface *AssetInterfaceRef;
@@ -39,16 +36,23 @@ class AssetLoader
     AssetLoader();
     ~AssetLoader();
 
-    bool        ParseAssetData(AssetInterface* assetinterface);
-
     static AssetLoader  Instance;
 
 public:
     const errno_t   GetError() const;
     const eAssetType    GetAssetType() const;
+    inline const uint8_t* GetDataBufferPtr() const
+    {
+        return FileDataBuffer;
+    }
 
-    bool            OpenAsset(const char* const path);
+    void            SetAssetRef(AssetInterface* assetInterface);
+
+    bool            OpenAsset(const std::string& path);
     bool            CloseAsset();
 
-    static AssetLoader&    GetInstance();
+    static inline AssetLoader& GetInstance()
+    {
+        return Instance;
+    }
 };

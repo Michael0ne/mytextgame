@@ -18,10 +18,10 @@ static const char* AssetsToLoad[] =
 };
 static constexpr size_t AssetsCount = 4;
 
-void InitGame()
+bool InitGame()
 {
     uint32_t assetsLoadedSuccessfully = 0;
-    TimerScoped timer([](TimerScoped::TimerDurationType& duration) { std::cout << "InitGame done! Took " << duration << " ms." << std::endl; });
+    TimerScoped timer([](const TimerDurationType& duration) { std::cout << "InitGame done! Took " << duration << " ms." << std::endl; });
 
     for (uint32_t i = 0; i < AssetsCount; ++i)
     {
@@ -29,30 +29,37 @@ void InitGame()
         {
             assetsLoadedSuccessfully++;
 
+            AssetInterface* assetInterface = nullptr;
             switch (AssetLoaderInstance.GetAssetType())
             {
             case eAssetType::TEXT:
-                AssetsList.push_back(new TextAsset(nullptr));
+                assetInterface = new TextAsset();
                 break;
             case eAssetType::GFX:
-                AssetsList.push_back(new GfxAsset(nullptr));
+                assetInterface = new GfxAsset();
                 break;
             case eAssetType::SOUND:
-                AssetsList.push_back(new SoundAsset(nullptr));
+                assetInterface = new SoundAsset();
                 break;
             }
 
+            AssetLoaderInstance.SetAssetRef(assetInterface);
+            assetInterface->ParseData(AssetLoaderInstance.GetDataBufferPtr());
+
+            AssetsList.push_back(assetInterface);
             AssetLoaderInstance.CloseAsset();
         }
     }
 
     if (assetsLoadedSuccessfully == AssetsCount)
-        std::cout << "Assets loaded!" << std::endl;
+        return true;
+    else
+        return false;
 }
 
 void UnInitGame()
 {
-    TimerScoped timer([](TimerScoped::TimerDurationType& duration) { std::cout << "UnInitGame done! Took " << duration << " ms." << std::endl; });
+    TimerScoped timer([](const TimerDurationType& duration) { std::cout << "UnInitGame done! Took " << duration << " ms." << std::endl; });
 
     for (uint32_t i = 0; i < AssetsList.size(); ++i)
     {
@@ -63,14 +70,31 @@ void UnInitGame()
 
 void LoopGame()
 {
+    auto timeStart = std::chrono::high_resolution_clock::now();
+    const std::chrono::duration<double> timeInterval(10.0);
+
     while (true)
-        _sleep(10);
+    {
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(10ms);
+
+        const auto timeCurrent = std::chrono::high_resolution_clock::now();
+        if ((timeCurrent - timeStart) >= timeInterval)
+        {
+            std::cout << "10 seconds passed..." << std::endl;
+            timeStart = timeCurrent;
+
+            const std::string& title = AssetsList[0]->CastTo<TextAsset>().GetKeyValue("TitleHeader");
+            std::cout << title << std::endl;
+        }
+    }
 }
 
 int main(const int argc, const char** argv)
 {
-    InitGame();
-    LoopGame();
+    if (InitGame())
+        LoopGame();
+
     UnInitGame();
 
     return 0;
