@@ -22,7 +22,10 @@ set_target_properties(MyTextGame
 target_include_directories(MyTextGame PRIVATE "src/")
 target_include_directories(MyTextGame PRIVATE "src/assets/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/xxHash/")
+target_include_directories(MyTextGame PRIVATE "thirdparty/SDL/include/")
+
 add_subdirectory("thirdparty/xxHash/cmake_unofficial/")
+add_subdirectory("thirdparty/SDL/")
 
 target_sources(MyTextGame PRIVATE "src/MyTextGame.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/Loader.cpp")
@@ -33,6 +36,7 @@ target_sources(MyTextGame PRIVATE "src/assets/SoundAsset.cpp")
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
 target_link_libraries(MyTextGame PRIVATE "xxhash")
+target_link_libraries(MyTextGame PRIVATE "SDL2")
 
 set(CMAKE_BUILD_PARALLEL_LEVEL 4)
 

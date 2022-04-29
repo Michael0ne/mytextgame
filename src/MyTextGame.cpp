@@ -17,6 +17,13 @@ static const std::list<std::string> AssetsToLoad =
     "gfx:title/gametitle.jpg"
 };
 
+static SDL_Window* GameWindow = nullptr;
+static SDL_Surface* GameWindowSurface = nullptr;
+static SDL_Event GameWindowEvent;
+static bool QuitRequested = false;
+static SDL_Renderer* GameRenderer;
+static SDL_AudioDeviceID GameAudioDeviceId;
+
 uint32_t InstantiateAssets()
 {
     uint32_t assetsLoadedSuccessfully = 0;
@@ -50,14 +57,90 @@ uint32_t InstantiateAssets()
     return assetsLoadedSuccessfully;
 }
 
+uint32_t UnloadAssets()
+{
+    uint32_t assetsFreed = 0;
+    for (uint32_t i = 0; i < AssetsList.size(); ++i)
+    {
+        if (AssetsList[i])
+        {
+            assetsFreed++;
+            delete AssetsList[i];
+        }
+    }
+
+    return assetsFreed;
+}
+
+void AudioCallback(void* userdata, Uint8* stream, int len)
+{
+}
+
+bool InitSDL()
+{
+    if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    {
+        std::cout << "[SDL] Init error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    GameWindow = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_OPENGL);
+    if (!GameWindow)
+    {
+        std::cout << "[SDL] Window create error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    GameWindowSurface = SDL_GetWindowSurface(GameWindow);
+    if (!GameWindowSurface)
+    {
+        std::cout << "[SDL] Can't obtain game window surface! " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    SDL_AudioSpec DesiredAudioSpec, ActualAudioSpec;
+    DesiredAudioSpec.freq = 48100;
+    DesiredAudioSpec.format = AUDIO_F32;
+    DesiredAudioSpec.channels = 2;
+    DesiredAudioSpec.samples = 4096;
+    DesiredAudioSpec.callback = AudioCallback;
+
+    GameAudioDeviceId = SDL_OpenAudioDevice(nullptr, 0, &DesiredAudioSpec, &ActualAudioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
+    if (!GameAudioDeviceId)
+    {
+        std::cout << "[SDL] Can't obtain audio device! " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    GameRenderer = SDL_CreateRenderer(GameWindow, -1, SDL_RENDERER_ACCELERATED);
+    if (!GameRenderer)
+    {
+        std::cout << "[SDL] Can't create renderer! " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+void UnInitSDL()
+{
+    SDL_CloseAudioDevice(GameAudioDeviceId);
+    SDL_DestroyRenderer(GameRenderer);
+    SDL_DestroyWindow(GameWindow);
+    SDL_Quit();
+
+    std::cout << "[SDL] Now uninitialized" << std::endl;
+}
+
 bool InitGame()
 {
     TimerScoped timer([](const TimerDurationType& duration) { std::cout << "InitGame done! Took " << duration << std::endl; });
 
+    const bool sdlReady = InitSDL();
     const uint32_t assetsLoaded = InstantiateAssets();
-    std::cout << "Assets loaded (" << assetsLoaded << "/" << AssetsToLoad.size() << ")" << std::endl;
+    std::cout << "[InitGame] Assets loaded (" << assetsLoaded << "/" << AssetsToLoad.size() << ")" << std::endl;
 
-    if (assetsLoaded == AssetsToLoad.size())
+    if (assetsLoaded == AssetsToLoad.size() && sdlReady)
         return true;
     else
         return false;
@@ -67,52 +150,47 @@ void UnInitGame()
 {
     TimerScoped timer([](const TimerDurationType& duration) { std::cout << "UnInitGame done! Took " << duration << std::endl; });
 
-    for (uint32_t i = 0; i < AssetsList.size(); ++i)
-    {
-        if (AssetsList[i])
-            delete AssetsList[i];
-    }
-}
-
-void ProcessInput()
-{
-    std::cout << "ProcessInput" << std::endl;
-
-    while (true)
-        _sleep(100);
-}
-
-void ProcessLogic()
-{
-    std::cout << "ProcessLogic" << std::endl;
-
-    while (true)
-        _sleep(100);
-}
-
-void ProcessGfx()
-{
-    std::cout << "ProcessGfx" << std::endl;
-
-    while (true)
-        _sleep(100);
+    UnloadAssets();
+    UnInitSDL();
 }
 
 void LoopGame()
 {
-    std::thread processInputThread(&ProcessInput);
-    std::thread processLogicThread(&ProcessLogic);
-    std::thread processGfxThread(&ProcessGfx);
+    while (SDL_PollEvent(&GameWindowEvent) != 0)
+    {
+        if (GameWindowEvent.type == SDL_QUIT)
+            QuitRequested = true;
 
-    processInputThread.join();
-    processLogicThread.join();
-    processGfxThread.join();
+        if (GameWindowEvent.type == SDL_KEYDOWN)
+        {
+            switch (GameWindowEvent.key.keysym.sym)
+            {
+            case SDLK_UP:
+                SDL_PauseAudioDevice(GameAudioDeviceId, 0);
+                break;
+            case SDLK_DOWN:
+                SDL_PauseAudioDevice(GameAudioDeviceId, 1);
+                break;
+            }
+        }
+
+        SDL_SetRenderDrawColor(GameRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(GameRenderer);
+
+        SDL_RenderPresent(GameRenderer);
+
+        if (QuitRequested)
+            break;
+    };
 }
 
 int main(const int argc, const char** argv)
 {
     if (InitGame())
-        LoopGame();
+    {
+        while (!QuitRequested)
+            LoopGame();
+    }
 
     UnInitGame();
 
