@@ -7,7 +7,7 @@
 
 static AssetLoader& AssetLoaderInstance = AssetLoader::GetInstance();
 static std::vector<AssetInterface*> AssetsList;
-static const char* AssetsToLoad[] =
+static const std::list<std::string> AssetsToLoad =
 {
     //  Text
     "text:intro.txt",
@@ -16,42 +16,48 @@ static const char* AssetsToLoad[] =
     "gfx:title/bg.jpg",
     "gfx:title/gametitle.jpg"
 };
-static constexpr size_t AssetsCount = 4;
+
+uint32_t InstantiateAssets()
+{
+    uint32_t assetsLoadedSuccessfully = 0;
+    for (auto it = AssetsToLoad.begin(); it != AssetsToLoad.end(); ++it)
+    {
+        if (!AssetLoaderInstance.OpenAsset(*it))
+            continue;
+
+        assetsLoadedSuccessfully++;
+        AssetInterface* assetInterface = nullptr;
+        switch (AssetLoaderInstance.GetAssetType())
+        {
+        case eAssetType::TEXT:
+            assetInterface = new TextAsset();
+            break;
+        case eAssetType::GFX:
+            assetInterface = new GfxAsset();
+            break;
+        case eAssetType::SOUND:
+            assetInterface = new SoundAsset();
+            break;
+        }
+
+        AssetLoaderInstance.SetAssetRef(assetInterface);
+        assetInterface->ParseData(AssetLoaderInstance.GetDataBufferPtr());
+
+        AssetsList.push_back(assetInterface);
+        AssetLoaderInstance.CloseAsset();
+    }
+
+    return assetsLoadedSuccessfully;
+}
 
 bool InitGame()
 {
-    uint32_t assetsLoadedSuccessfully = 0;
-    TimerScoped timer([](const TimerDurationType& duration) { std::cout << "InitGame done! Took " << duration << " ms." << std::endl; });
+    TimerScoped timer([](const TimerDurationType& duration) { std::cout << "InitGame done! Took " << duration << std::endl; });
 
-    for (uint32_t i = 0; i < AssetsCount; ++i)
-    {
-        if (AssetLoaderInstance.OpenAsset(AssetsToLoad[i]))
-        {
-            assetsLoadedSuccessfully++;
+    const uint32_t assetsLoaded = InstantiateAssets();
+    std::cout << "Assets loaded (" << assetsLoaded << "/" << AssetsToLoad.size() << ")" << std::endl;
 
-            AssetInterface* assetInterface = nullptr;
-            switch (AssetLoaderInstance.GetAssetType())
-            {
-            case eAssetType::TEXT:
-                assetInterface = new TextAsset();
-                break;
-            case eAssetType::GFX:
-                assetInterface = new GfxAsset();
-                break;
-            case eAssetType::SOUND:
-                assetInterface = new SoundAsset();
-                break;
-            }
-
-            AssetLoaderInstance.SetAssetRef(assetInterface);
-            assetInterface->ParseData(AssetLoaderInstance.GetDataBufferPtr());
-
-            AssetsList.push_back(assetInterface);
-            AssetLoaderInstance.CloseAsset();
-        }
-    }
-
-    if (assetsLoadedSuccessfully == AssetsCount)
+    if (assetsLoaded == AssetsToLoad.size())
         return true;
     else
         return false;
@@ -59,7 +65,7 @@ bool InitGame()
 
 void UnInitGame()
 {
-    TimerScoped timer([](const TimerDurationType& duration) { std::cout << "UnInitGame done! Took " << duration << " ms." << std::endl; });
+    TimerScoped timer([](const TimerDurationType& duration) { std::cout << "UnInitGame done! Took " << duration << std::endl; });
 
     for (uint32_t i = 0; i < AssetsList.size(); ++i)
     {
@@ -68,9 +74,39 @@ void UnInitGame()
     }
 }
 
+void ProcessInput()
+{
+    std::cout << "ProcessInput" << std::endl;
+
+    while (true)
+        _sleep(100);
+}
+
+void ProcessLogic()
+{
+    std::cout << "ProcessLogic" << std::endl;
+
+    while (true)
+        _sleep(100);
+}
+
+void ProcessGfx()
+{
+    std::cout << "ProcessGfx" << std::endl;
+
+    while (true)
+        _sleep(100);
+}
+
 void LoopGame()
 {
-    TimerIntervalScoped timer((TimerDurationType)5.0, [](const TimerDurationType& duration) { std::cout << "Expected: 5s, Elapsed: " << duration << std::endl; });
+    std::thread processInputThread(&ProcessInput);
+    std::thread processLogicThread(&ProcessLogic);
+    std::thread processGfxThread(&ProcessGfx);
+
+    processInputThread.join();
+    processLogicThread.join();
+    processGfxThread.join();
 }
 
 int main(const int argc, const char** argv)
