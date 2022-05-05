@@ -4,7 +4,9 @@
 #include "TextAsset.h"
 #include "GfxAsset.h"
 #include "SoundAsset.h"
+#include "Settings.h"
 
+//  ASSETS
 static AssetLoader& AssetLoaderInstance = AssetLoader::GetInstance();
 static std::vector<AssetInterface*> AssetsList;
 static const std::list<std::string> AssetsToLoad =
@@ -17,12 +19,20 @@ static const std::list<std::string> AssetsToLoad =
     "gfx:title/gametitle.jpg"
 };
 
+//  SDL
 static SDL_Window* GameWindow = nullptr;
 static SDL_Surface* GameWindowSurface = nullptr;
 static SDL_Event GameWindowEvent;
 static bool QuitRequested = false;
 static SDL_Renderer* GameRenderer;
 static SDL_AudioDeviceID GameAudioDeviceId;
+
+//  SETTINGS
+static std::unordered_map<std::string, std::string> SettingsList;
+
+//  INPUT
+static SDL_Keycode LastPressedKey;
+static SDL_Keycode CurrentPressedKey;
 
 uint32_t InstantiateAssets()
 {
@@ -132,9 +142,30 @@ void UnInitSDL()
     std::cout << "[SDL] Now uninitialized" << std::endl;
 }
 
+void LoadSettings()
+{
+    std::cout << "[Settings] Reading settings file..." << std::endl;
+
+    FILE* settingsFilePtr = nullptr;
+    errno_t settingsFileReadStatus = fopen_s(&settingsFilePtr, SETTINGS_FILE_NAME, "r");
+    if (settingsFileReadStatus)
+    {
+        std::cout << "[Settings] Can't open settings file!" << std::endl;
+        return;
+    }
+
+    ParseSettingsFile(settingsFilePtr, SettingsList);
+
+    fclose(settingsFilePtr);
+
+    std::cout << "[Settings] Done. Read " << SettingsList.size() << std::endl;
+}
+
 bool InitGame()
 {
     TimerScoped timer([](const TimerDurationType& duration) { std::cout << "InitGame done! Took " << duration << std::endl; });
+
+    LoadSettings();
 
     const bool sdlReady = InitSDL();
     const uint32_t assetsLoaded = InstantiateAssets();
@@ -154,34 +185,61 @@ void UnInitGame()
     UnInitSDL();
 }
 
+void UpdateInput(SDL_Event& inputevent)
+{
+    if (inputevent.key.type == SDL_KEYUP)
+        CurrentPressedKey = inputevent.key.keysym.sym;
+}
+
+void UpdateMouse(SDL_Event& mouseevent)
+{
+
+}
+
+void UpdateLogic(const float delta)
+{
+}
+
+void UpdateGfx(SDL_Renderer* renderer, const float delta)
+{
+}
+
 void LoopGame()
 {
+    const uint32_t FrameStartTicks = SDL_GetTicks();
+
+    SDL_SetRenderDrawColor(GameRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(GameRenderer);
+
     while (SDL_PollEvent(&GameWindowEvent) != 0)
     {
-        if (GameWindowEvent.type == SDL_QUIT)
-            QuitRequested = true;
-
-        if (GameWindowEvent.type == SDL_KEYDOWN)
+        switch (GameWindowEvent.type)
         {
-            switch (GameWindowEvent.key.keysym.sym)
-            {
-            case SDLK_UP:
-                SDL_PauseAudioDevice(GameAudioDeviceId, 0);
-                break;
-            case SDLK_DOWN:
-                SDL_PauseAudioDevice(GameAudioDeviceId, 1);
-                break;
-            }
-        }
-
-        SDL_SetRenderDrawColor(GameRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(GameRenderer);
-
-        SDL_RenderPresent(GameRenderer);
-
-        if (QuitRequested)
+        case SDL_QUIT:
+            QuitRequested = true;
             break;
+        case SDL_KEYDOWN:
+        case SDL_KEYUP:
+            UpdateInput(GameWindowEvent);
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEMOTION:
+        case SDL_MOUSEBUTTONUP:
+        case SDL_MOUSEWHEEL:
+            UpdateMouse(GameWindowEvent);
+            break;
+        }
     };
+
+    UpdateLogic(0.f);
+    UpdateGfx(GameRenderer, 0.f);
+
+    const uint32_t FrameDelta = (SDL_GetTicks() - FrameStartTicks) | 1;
+    const float FPS = 1000.f / (float)FrameDelta;
+
+    std::cout << FPS << ": " << FrameDelta << std::endl;
+
+    SDL_RenderPresent(GameRenderer);
 }
 
 int main(const int argc, const char** argv)

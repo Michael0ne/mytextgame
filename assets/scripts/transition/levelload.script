@@ -1,0 +1,5 @@
+function LoadLevel(levelName)
+{
+	//	UnLoading current scene is the responsibility of the caller.
+	//	Level name is just a scene name with extension.
+}

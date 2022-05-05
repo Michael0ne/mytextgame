@@ -21,6 +21,7 @@ set_target_properties(MyTextGame
 
 target_include_directories(MyTextGame PRIVATE "src/")
 target_include_directories(MyTextGame PRIVATE "src/assets/")
+target_include_directories(MyTextGame PRIVATE "src/scripting/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/xxHash/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/SDL/include/")
 
@@ -32,6 +33,7 @@ target_sources(MyTextGame PRIVATE "src/assets/Loader.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/TextAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/GfxAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/SoundAsset.cpp")
+target_sources(MyTextGame PRIVATE "src/scripting/ScriptFunctions.cpp")
 
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 

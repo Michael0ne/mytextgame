@@ -1,0 +1,23 @@
+function main()
+{
+	//	Register buttons events.
+	StartButtonHandle = GetEntityByName("StartButtonText")
+	AddEvent(StartButtonHandle, "Click", StartButtonClick)
+	
+	QuitButtonHandle = GetEntityByName("QuitButtonText")
+	AddEvent(QuitButtonHandle, "Click", QuitButtonClick)
+}
+
+function StartButtonClick()
+{
+	Unload(this)
+	FadeOut(1000)
+	StartScript("script:transition/levelload.script/LoadLevel", "level01")
+}
+
+function QuitButtonClick()
+{
+	Unload(this)
+	FadeOut(500)
+	StartScript("script:transition/quitgame.script")
+}
