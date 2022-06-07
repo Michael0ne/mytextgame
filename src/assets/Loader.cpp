@@ -28,7 +28,7 @@ bool AssetLoader::CloseAsset()
     delete[] FileDataBuffer;
     FileSize = -1;
 
-    std::cout << "[AssetLoader] File released!" << std::endl;
+    std::cout << LOGGER_TAG "File released!" << std::endl;
 
     return true;
 }
@@ -100,7 +100,7 @@ bool AssetLoader::OpenAsset(const std::string& path)
 
     if (FileOpenStatus)
     {
-        std::cout << "[AssetLoader] Can't open \"" << FilePath << "\"!" << std::endl;
+        std::cout << LOGGER_TAG "Can't open \"" << FilePath << "\"!" << std::endl;
         return false;
     }
 
@@ -113,7 +113,7 @@ bool AssetLoader::OpenAsset(const std::string& path)
     memset(FileDataBuffer, NULL, FileSize);
     fread_s(FileDataBuffer, FileSize, FileSize, 1, FilePtr);
 
-    std::cout << "[AssetLoader] Open \"" << FileName << "\" successful, size = " << FileSize << std::endl;
+    std::cout << LOGGER_TAG "Open \"" << FileName << "\" successful, size = " << FileSize << std::endl;
 
     return true;
 }

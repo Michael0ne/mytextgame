@@ -11,3 +11,6 @@
 #include <thread>
 #include <SDL.h>
 #include <SDL_audio.h>
+#include <json.h>
+
+#define LOGGER_TAG "[" << __FILE__ << ":" << __func__ << ":" << __LINE__ << "] "

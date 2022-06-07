@@ -22,11 +22,14 @@ set_target_properties(MyTextGame
 target_include_directories(MyTextGame PRIVATE "src/")
 target_include_directories(MyTextGame PRIVATE "src/assets/")
 target_include_directories(MyTextGame PRIVATE "src/scripting/")
+target_include_directories(MyTextGame PRIVATE "src/scene/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/xxHash/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/SDL/include/")
+target_include_directories(MyTextGame PRIVATE "thirdparty/jsoncpp/include/json/")
 
 add_subdirectory("thirdparty/xxHash/cmake_unofficial/")
 add_subdirectory("thirdparty/SDL/")
+add_subdirectory("thirdparty/jsoncpp/")
 
 target_sources(MyTextGame PRIVATE "src/MyTextGame.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/Loader.cpp")
@@ -34,11 +37,14 @@ target_sources(MyTextGame PRIVATE "src/assets/TextAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/GfxAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/SoundAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/scripting/ScriptFunctions.cpp")
+target_sources(MyTextGame PRIVATE "src/scene/SceneLoader.cpp")
 
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
 target_link_libraries(MyTextGame PRIVATE "xxhash")
 target_link_libraries(MyTextGame PRIVATE "SDL2")
+set(BUILD_SHARED_LIBS false)
+target_link_libraries(MyTextGame PRIVATE "jsoncpp_static")
 
 set(CMAKE_BUILD_PARALLEL_LEVEL 4)
 

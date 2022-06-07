@@ -5,6 +5,7 @@
 #include "GfxAsset.h"
 #include "SoundAsset.h"
 #include "Settings.h"
+#include "SceneLoader.h"
 
 //  ASSETS
 static AssetLoader& AssetLoaderInstance = AssetLoader::GetInstance();
@@ -26,9 +27,6 @@ static SDL_Event GameWindowEvent;
 static bool QuitRequested = false;
 static SDL_Renderer* GameRenderer;
 static SDL_AudioDeviceID GameAudioDeviceId;
-
-//  SETTINGS
-static std::unordered_map<std::string, std::string> SettingsList;
 
 //  INPUT
 static SDL_Keycode LastPressedKey;
@@ -90,21 +88,21 @@ bool InitSDL()
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
-        std::cout << "[SDL] Init error: " << SDL_GetError() << std::endl;
+        std::cout << LOGGER_TAG << "Init error : " << SDL_GetError() << std::endl;
         return false;
     }
 
     GameWindow = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_OPENGL);
     if (!GameWindow)
     {
-        std::cout << "[SDL] Window create error: " << SDL_GetError() << std::endl;
+        std::cout << LOGGER_TAG << "Window create error: " << SDL_GetError() << std::endl;
         return false;
     }
 
     GameWindowSurface = SDL_GetWindowSurface(GameWindow);
     if (!GameWindowSurface)
     {
-        std::cout << "[SDL] Can't obtain game window surface! " << SDL_GetError() << std::endl;
+        std::cout << LOGGER_TAG << "Can't obtain game window surface! " << SDL_GetError() << std::endl;
         return false;
     }
 
@@ -118,14 +116,14 @@ bool InitSDL()
     GameAudioDeviceId = SDL_OpenAudioDevice(nullptr, 0, &DesiredAudioSpec, &ActualAudioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
     if (!GameAudioDeviceId)
     {
-        std::cout << "[SDL] Can't obtain audio device! " << SDL_GetError() << std::endl;
+        std::cout << LOGGER_TAG << "Can't obtain audio device! " << SDL_GetError() << std::endl;
         return false;
     }
 
     GameRenderer = SDL_CreateRenderer(GameWindow, -1, SDL_RENDERER_ACCELERATED);
     if (!GameRenderer)
     {
-        std::cout << "[SDL] Can't create renderer! " << SDL_GetError() << std::endl;
+        std::cout << LOGGER_TAG << "Can't create renderer! " << SDL_GetError() << std::endl;
         return false;
     }
 
@@ -139,42 +137,43 @@ void UnInitSDL()
     SDL_DestroyWindow(GameWindow);
     SDL_Quit();
 
-    std::cout << "[SDL] Now uninitialized" << std::endl;
+    std::cout << LOGGER_TAG << "Now uninitialized" << std::endl;
 }
 
-void LoadSettings()
+bool LoadSettings()
 {
-    std::cout << "[Settings] Reading settings file..." << std::endl;
+    Settings::Open("settings.txt");
 
-    FILE* settingsFilePtr = nullptr;
-    errno_t settingsFileReadStatus = fopen_s(&settingsFilePtr, SETTINGS_FILE_NAME, "r");
-    if (settingsFileReadStatus)
-    {
-        std::cout << "[Settings] Can't open settings file!" << std::endl;
-        return;
-    }
+    return Settings::IsOpen();
+}
 
-    ParseSettingsFile(settingsFilePtr, SettingsList);
+bool LoadScene()
+{
+    SceneLoader sceneLoader("assets/menu.scene");
 
-    fclose(settingsFilePtr);
-
-    std::cout << "[Settings] Done. Read " << SettingsList.size() << std::endl;
+    return sceneLoader.IsOpen();
 }
 
 bool InitGame()
 {
     TimerScoped timer([](const TimerDurationType& duration) { std::cout << "InitGame done! Took " << duration << std::endl; });
 
-    LoadSettings();
-
-    const bool sdlReady = InitSDL();
-    const uint32_t assetsLoaded = InstantiateAssets();
-    std::cout << "[InitGame] Assets loaded (" << assetsLoaded << "/" << AssetsToLoad.size() << ")" << std::endl;
-
-    if (assetsLoaded == AssetsToLoad.size() && sdlReady)
-        return true;
-    else
+    if (!LoadSettings())
         return false;
+
+    if (!InitSDL())
+        return false;
+
+    const uint32_t assetsLoaded = InstantiateAssets();
+    std::cout << LOGGER_TAG << "Assets loaded (" << assetsLoaded << "/" << AssetsToLoad.size() << ")" << std::endl;
+
+    if (assetsLoaded < AssetsToLoad.size())
+        return false;
+
+    if (!LoadScene())
+        return false;
+
+    return true;
 }
 
 void UnInitGame()
@@ -193,7 +192,6 @@ void UpdateInput(SDL_Event& inputevent)
 
 void UpdateMouse(SDL_Event& mouseevent)
 {
-
 }
 
 void UpdateLogic(const float delta)
@@ -234,12 +232,12 @@ void LoopGame()
     UpdateLogic(0.f);
     UpdateGfx(GameRenderer, 0.f);
 
+    SDL_RenderPresent(GameRenderer);
+
     const uint32_t FrameDelta = (SDL_GetTicks() - FrameStartTicks) | 1;
     const float FPS = 1000.f / (float)FrameDelta;
 
-    std::cout << FPS << ": " << FrameDelta << std::endl;
-
-    SDL_RenderPresent(GameRenderer);
+    std::cout << "FPS: " << FPS << " (" << FrameDelta << "ms)" << std::endl;
 }
 
 int main(const int argc, const char** argv)
