@@ -32,10 +32,10 @@ SceneLoader::SceneLoader(const std::string& fileName)
     HasOpen = true;
 }
 
-void SceneLoader::PrintSectionParameters(const std::string& sectionName) const
+const Json::Value& SceneLoader::GetSectionValue(const std::string& sectionName) const
 {
     if (!IsOpen() || !RootValue)
-        return;
+        return RootValue;
 
-    std::cout << RootValue[sectionName][0]["id"] << std::endl;
+    return RootValue[sectionName];
 }

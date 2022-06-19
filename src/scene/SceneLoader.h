@@ -10,7 +10,7 @@ private:
 public:
     SceneLoader(const std::string& fileName);
 
-    void PrintSectionParameters(const std::string& sectionName) const;
+    const Json::Value& GetSectionValue(const std::string& sectionName) const;
     inline const bool IsOpen() const
     {
         return HasOpen;

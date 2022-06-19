@@ -55,4 +55,29 @@ public:
     {
         return Instance;
     }
+
+    //  Given input path with format '<asset type>:<folder>/<filename>.<extension>' this will return parsed parts of it.
+    static void ParsePath(
+        const std::string_view& path,
+        std::string& fileName,
+        std::string& fileExtension,
+        std::string& folderPath,
+        eAssetType& fileType)
+    {
+        const size_t typeSeparatorPosition = path.find_first_of(':');
+        const size_t filenameStartPosition = path.find_last_of('/');
+        const size_t filenameExtensionPosition = path.find_last_of('.');
+
+        //  Can't find at least one part that should be in the input - bail out!
+        if (typeSeparatorPosition == std::string::npos ||
+            filenameStartPosition == std::string::npos ||
+            filenameExtensionPosition == std::string::npos)
+            return;
+
+        const XXH64_hash_t typeHash = XXH64(path.data(), typeSeparatorPosition, NULL);
+        fileName = path.substr(filenameStartPosition + 1, filenameExtensionPosition - filenameStartPosition - 1);
+        fileExtension = path.substr(filenameExtensionPosition + 1);
+        folderPath = path.substr(typeSeparatorPosition + 1, filenameStartPosition - typeSeparatorPosition - 1);
+        fileType = (eAssetType)typeHash;
+    }
 };

@@ -42,6 +42,7 @@ uint32_t InstantiateAssets()
 
         assetsLoadedSuccessfully++;
         AssetInterface* assetInterface = nullptr;
+        //AssetInterfaceFactory assetInterface(AssetLoaderInstance.GetAssetType());
         switch (AssetLoaderInstance.GetAssetType())
         {
         case eAssetType::TEXT:
@@ -150,6 +151,7 @@ bool LoadSettings()
 bool LoadScene()
 {
     SceneLoader sceneLoader("assets/menu.scene");
+    const Json::Value& menu = sceneLoader.GetSectionValue("menu");
 
     return sceneLoader.IsOpen();
 }
@@ -180,6 +182,7 @@ void UnInitGame()
 {
     TimerScoped timer([](const TimerDurationType& duration) { std::cout << "UnInitGame done! Took " << duration << std::endl; });
 
+    Settings::Shutdown();
     UnloadAssets();
     UnInitSDL();
 }
@@ -188,6 +191,12 @@ void UpdateInput(SDL_Event& inputevent)
 {
     if (inputevent.key.type == SDL_KEYUP)
         CurrentPressedKey = inputevent.key.keysym.sym;
+
+    if (CurrentPressedKey == SDLK_f)
+    {
+        //  TESTTESTTEST
+        Settings::WriteValue("GameName", "LonelyNight");
+    }
 }
 
 void UpdateMouse(SDL_Event& mouseevent)
@@ -234,10 +243,10 @@ void LoopGame()
 
     SDL_RenderPresent(GameRenderer);
 
-    const uint32_t FrameDelta = (SDL_GetTicks() - FrameStartTicks) | 1;
-    const float FPS = 1000.f / (float)FrameDelta;
+    //const uint32_t FrameDelta = (SDL_GetTicks() - FrameStartTicks) | 1;
+    //const float FPS = 1000.f / (float)FrameDelta;
 
-    std::cout << "FPS: " << FPS << " (" << FrameDelta << "ms)" << std::endl;
+    //std::cout << "FPS: " << FPS << " (" << FrameDelta << "ms)" << std::endl;
 }
 
 int main(const int argc, const char** argv)
