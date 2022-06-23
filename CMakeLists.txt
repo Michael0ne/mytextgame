@@ -12,6 +12,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 
+set(JSONCPP_WITH_TESTS OFF)
+set(JSONCPP_WITH_EXAMPLE OFF)
+
 set_target_properties(MyTextGame
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY lib
@@ -43,7 +46,6 @@ target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
 target_link_libraries(MyTextGame PRIVATE "xxhash")
 target_link_libraries(MyTextGame PRIVATE "SDL2")
-set(BUILD_SHARED_LIBS false)
 target_link_libraries(MyTextGame PRIVATE "jsoncpp_static")
 
 set(CMAKE_BUILD_PARALLEL_LEVEL 4)
@@ -51,3 +53,11 @@ set(CMAKE_BUILD_PARALLEL_LEVEL 4)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MyTextGame PROPERTY CXX_STANDARD 20)
 endif()
+
+add_custom_command(
+    TARGET MyTextGame
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:SDL2>
+        $<TARGET_FILE_DIR:MyTextGame>/$<TARGET_FILE_NAME:SDL2>
+)
