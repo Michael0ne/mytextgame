@@ -143,9 +143,29 @@ public:
         return Instance->ReadSuccessfull;
     }
 
-    static std::string& GetValue(const std::string& key)
+    static const std::string& GetValue(const std::string& key, const std::string& defValue)
     {
-        return Instance->SettingsMap.at(key);
+        try
+        {
+            return Instance->SettingsMap.at(key);
+        }
+        catch (std::out_of_range)
+        {
+            return defValue;
+        }
+    }
+
+    static bool RemoveValue(const std::string& key)
+    {
+        try
+        {
+            Instance->SettingsMap.erase(key);
+            return true;
+        }
+        catch (std::out_of_range)
+        {
+            return false;
+        }
     }
 
     static void WriteValue(const std::string& key, const std::string& value)

@@ -6,6 +6,9 @@
 #include "SoundAsset.h"
 #include "Settings.h"
 #include "SceneLoader.h"
+#include "KeyboardInput.h"
+#include "GamepadInput.h"
+#include "Gfx.h"
 
 //  ASSETS
 static AssetLoader& AssetLoaderInstance = AssetLoader::GetInstance();
@@ -31,6 +34,11 @@ static SDL_AudioDeviceID GameAudioDeviceId;
 //  INPUT
 static SDL_Keycode LastPressedKey;
 static SDL_Keycode CurrentPressedKey;
+InputInterface* InputInstance = nullptr;
+
+//  GFX
+static Gfx& GfxInstance = Gfx::GetInstance();
+static const uint32_t ScreenResolution[2] = { 800, 600 };
 
 uint32_t InstantiateAssets()
 {
@@ -93,7 +101,7 @@ bool InitSDL()
         return false;
     }
 
-    GameWindow = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_OPENGL);
+    GameWindow = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ScreenResolution[0], ScreenResolution[1], SDL_WINDOW_OPENGL);
     if (!GameWindow)
     {
         std::cout << LOGGER_TAG << "Window create error: " << SDL_GetError() << std::endl;
@@ -156,6 +164,23 @@ bool LoadScene()
     return sceneLoader.IsOpen();
 }
 
+bool InitInput()
+{
+    const std::string defInputType("keyboard");
+    const std::string& inputTypeSetting = Settings::GetValue("InputType", defInputType);
+    const XXH64_hash_t inputTypeSettingHash = XXH64(inputTypeSetting.c_str(), inputTypeSetting.length(), NULL);
+
+    std::cout << LOGGER_TAG << "Input type selected: " << inputTypeSetting << " (" << std::hex << inputTypeSettingHash << std::dec << ")" << std::endl;
+
+    InputInstance = new InputInterface((eInputType)inputTypeSettingHash);
+    return InputInstance->Valid();
+}
+
+bool InitGfx()
+{
+    return GfxInstance.Init(ScreenResolution[0], ScreenResolution[1]);
+}
+
 bool InitGame()
 {
     TimerScoped timer([](const TimerDurationType& duration) { std::cout << "InitGame done! Took " << duration << std::endl; });
@@ -164,6 +189,12 @@ bool InitGame()
         return false;
 
     if (!InitSDL())
+        return false;
+
+    if (!InitInput())
+        return false;
+
+    if (!InitGfx())
         return false;
 
     const uint32_t assetsLoaded = InstantiateAssets();
@@ -182,6 +213,7 @@ void UnInitGame()
 {
     TimerScoped timer([](const TimerDurationType& duration) { std::cout << "UnInitGame done! Took " << duration << std::endl; });
 
+    delete InputInstance;
     Settings::Shutdown();
     UnloadAssets();
     UnInitSDL();
@@ -192,15 +224,12 @@ void UpdateInput(SDL_Event& inputevent)
     if (inputevent.key.type == SDL_KEYUP)
         CurrentPressedKey = inputevent.key.keysym.sym;
 
-    if (CurrentPressedKey == SDLK_f)
-    {
-        //  TESTTESTTEST
-        Settings::WriteValue("GameName", "LonelyNight");
-    }
+    InputInstance->UpdateKeys(inputevent);
 }
 
 void UpdateMouse(SDL_Event& mouseevent)
 {
+    InputInstance->UpdateMouse(mouseevent);
 }
 
 void UpdateLogic(const float delta)
@@ -209,6 +238,7 @@ void UpdateLogic(const float delta)
 
 void UpdateGfx(SDL_Renderer* renderer, const float delta)
 {
+    GfxInstance.Update(renderer, delta);
 }
 
 void LoopGame()

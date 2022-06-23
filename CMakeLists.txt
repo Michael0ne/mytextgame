@@ -45,6 +45,8 @@ target_sources(MyTextGame PRIVATE "src/assets/GfxAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/SoundAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/scripting/ScriptFunctions.cpp")
 target_sources(MyTextGame PRIVATE "src/scene/SceneLoader.cpp")
+target_sources(MyTextGame PRIVATE "src/input/IInput.cpp")
+target_sources(MyTextGame PRIVATE "src/render/Gfx.cpp")
 
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
