@@ -54,6 +54,7 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MyTextGame PROPERTY CXX_STANDARD 20)
 endif()
 
+# For SDL2 - after build is finished, copy output DLL into main project's bin directory.
 add_custom_command(
     TARGET MyTextGame
     POST_BUILD
@@ -61,3 +62,24 @@ add_custom_command(
         $<TARGET_FILE:SDL2>
         $<TARGET_FILE_DIR:MyTextGame>/$<TARGET_FILE_NAME:SDL2>
 )
+
+# Setup testing project.
+add_subdirectory("thirdparty/googletest")
+
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+enable_testing()
+
+add_executable(
+    MyTextGameTest
+    "test/MyTextGameTest.cc"
+)
+
+target_link_libraries(
+    MyTextGameTest
+    gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(MyTextGameTest)
