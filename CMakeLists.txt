@@ -54,6 +54,10 @@ target_link_libraries(MyTextGame PRIVATE "xxhash")
 target_link_libraries(MyTextGame PRIVATE "SDL2")
 target_link_libraries(MyTextGame PRIVATE "jsoncpp_static")
 
+target_link_libraries(MyTextGame PUBLIC "XInput")
+target_link_libraries(MyTextGame PUBLIC "dxguid")
+target_link_libraries(MyTextGame PUBLIC "dinput8")
+
 set(CMAKE_BUILD_PARALLEL_LEVEL 4)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

@@ -1,6 +1,14 @@
 #pragma once
 #include "Generic.h"
 
+using KeyCodeType = uint32_t;
+
+struct vec2packed
+{
+    int16_t     x;
+    int16_t     y;
+};
+
 enum class eInputType : uint64_t
 {
     NONE = -1,
@@ -10,12 +18,14 @@ enum class eInputType : uint64_t
 
 class InputInstance
 {
-public:
+    friend class InputInterface;
+protected:
     InputInstance() = default;
     virtual ~InputInstance() = default;
 
-    virtual uint32_t    GetKeyState(const uint32_t key) = 0;
-    virtual uint32_t    GetMouseState(const uint32_t button) = 0;
+    virtual uint32_t    GetKeyState(const KeyCodeType key) = 0;
+    virtual uint32_t    GetMouseState(const KeyCodeType button) = 0;
+    virtual void        Update() = 0;
 };
 
 class InputInterface
@@ -26,7 +36,7 @@ private:
     InputInstance  *Instance;
 
 public:
-    InputInterface(const eInputType inputType);
+    InputInterface(const eInputType inputType, const WindowHandle windowHandle);
 
     ~InputInterface()
     {
@@ -38,6 +48,16 @@ public:
         return IsValid;
     }
 
-    void UpdateKeys(SDL_Event& inputevent);
-    void UpdateMouse(SDL_Event& mouseevent);
+    void Update();
+
+    inline const bool   KeyPressed(const KeyCodeType keyCode) const
+    {
+        if (!Instance)
+            return false;
+        else
+            if ((keyCode >= DIMOFS_BUTTON0 && keyCode <= DIMOFS_BUTTON7) || keyCode == DIMOFS_X || keyCode == DIMOFS_Y || keyCode == DIMOFS_Z)
+                return Instance->GetMouseState(keyCode);
+            else
+                return Instance->GetKeyState(keyCode);
+    }
 };

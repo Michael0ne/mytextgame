@@ -1,37 +1,70 @@
 #pragma once
 #include "IInput.h"
+#define _AMD64_
+#include <Xinput.h>
 
 /// <summary>
 /// Do not use this class directly!
 /// InputInterface encapsulates it, so use that instead.
+/// An abstraction for managing XBox360 controller, using XInput.
 /// </summary>
 class GamepadInput : public InputInstance
 {
-#define MAX_GAMEPAD_KEYS    12
-#define MAX_STICKS_NUMBER   2
-
 private:
-    uint8_t     Buttons[MAX_GAMEPAD_KEYS];
-    int8_t      SticksAxis[MAX_STICKS_NUMBER];
+    uint16_t    Buttons;
+    uint8_t     LeftTrigger;
+    uint8_t     RightTrigger;
+
+    vec2packed  ThumbLeft;
+    vec2packed  ThumbRight;
+
+    XINPUT_STATE    XInputState;
 
 public:
     GamepadInput()
     {
-        //  TODO: acquire dinput interface or whatever.
+        memset(&XInputState, NULL, sizeof(XINPUT_STATE));
+
+        Buttons = NULL;
+        LeftTrigger = NULL;
+        RightTrigger = NULL;
+        ThumbLeft = { 0, 0 };
+        ThumbRight = { 0, 0 };
     }
 
     virtual ~GamepadInput()
     {
-        //  TODO: release dinput interface.
     }
 
-    virtual uint32_t    GetKeyState(const uint32_t key) override
+    virtual uint32_t    GetKeyState(const KeyCodeType key) override
+    {
+        if (key < XINPUT_GAMEPAD_Y && key > XINPUT_GAMEPAD_DPAD_UP)
+            return Buttons & key;
+        else
+            return NULL;
+    }
+
+    virtual uint32_t    GetMouseState(const KeyCodeType button) override
     {
         return NULL;
     }
 
-    virtual uint32_t    GetMouseState(const uint32_t button) override
+    virtual void    Update() override
     {
-        return NULL;
+        Buttons = NULL;
+        LeftTrigger = NULL;
+        RightTrigger = NULL;
+        ThumbLeft = { 0, 0 };
+        ThumbRight = { 0, 0 };
+
+        if (!XInputGetState(0, &XInputState))
+        {
+            Buttons = XInputState.Gamepad.wButtons;
+            LeftTrigger = XInputState.Gamepad.bLeftTrigger;
+            RightTrigger = XInputState.Gamepad.bRightTrigger;
+
+            ThumbLeft = { XInputState.Gamepad.sThumbLX, XInputState.Gamepad.sThumbLY };
+            ThumbRight = { XInputState.Gamepad.sThumbRX, XInputState.Gamepad.sThumbRY };
+        }
     }
 };

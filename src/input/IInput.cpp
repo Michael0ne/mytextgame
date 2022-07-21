@@ -2,7 +2,7 @@
 #include "KeyboardInput.h"
 #include "GamepadInput.h"
 
-InputInterface::InputInterface(const eInputType inputType)
+InputInterface::InputInterface(const eInputType inputType, const WindowHandle windowHandle)
 {
     IsValid = true;
     InputType = inputType;
@@ -11,7 +11,7 @@ InputInterface::InputInterface(const eInputType inputType)
     switch (inputType)
     {
     case eInputType::KEYBOARD:
-        Instance = new KeyboardInput;
+        Instance = new KeyboardInput(windowHandle);
         break;
     case eInputType::GAMEPAD:
         Instance = new GamepadInput;
@@ -27,16 +27,10 @@ InputInterface::InputInterface(const eInputType inputType)
 /// <summary>
 /// Updates underlying struct's keys (keys for keyboard, buttons for gamepad).
 /// </summary>
-/// <param name="inputevent">Reference to SDL event struct.</param>
-void InputInterface::UpdateKeys(SDL_Event& inputevent)
+void InputInterface::Update()
 {
+    if (!Instance)
+        return;
 
-}
-
-/// <summary>
-/// Updates underlying struct's data (mouse data for mouse, sticks for gamepad).
-/// </summary>
-/// <param name="mouseevent">Reference to SDL event struct.</param>
-void InputInterface::UpdateMouse(SDL_Event& mouseevent)
-{
+    Instance->Update();
 }

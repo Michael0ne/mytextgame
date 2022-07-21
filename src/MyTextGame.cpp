@@ -32,8 +32,6 @@ static SDL_Renderer* GameRenderer;
 static SDL_AudioDeviceID GameAudioDeviceId;
 
 //  INPUT
-static SDL_Keycode LastPressedKey;
-static SDL_Keycode CurrentPressedKey;
 InputInterface* InputInstance = nullptr;
 
 //  GFX
@@ -172,13 +170,16 @@ bool InitInput()
 
     std::cout << LOGGER_TAG << "Input type selected: " << inputTypeSetting << " (" << std::hex << inputTypeSettingHash << std::dec << ")" << std::endl;
 
-    InputInstance = new InputInterface((eInputType)inputTypeSettingHash);
+    InputInstance = new InputInterface((eInputType)inputTypeSettingHash, GfxInstance.GetWindowHandle());
     return InputInstance->Valid();
 }
 
 bool InitGfx()
 {
-    return GfxInstance.Init(ScreenResolution[0], ScreenResolution[1]);
+    SDL_SysWMinfo sysWMinfo = {};
+    SDL_GetWindowWMInfo(GameWindow, &sysWMinfo);
+
+    return GfxInstance.Init(sysWMinfo.info.win.window, ScreenResolution[0], ScreenResolution[1]);
 }
 
 bool InitGame()
@@ -191,10 +192,10 @@ bool InitGame()
     if (!InitSDL())
         return false;
 
-    if (!InitInput())
+    if (!InitGfx())
         return false;
 
-    if (!InitGfx())
+    if (!InitInput())
         return false;
 
     const uint32_t assetsLoaded = InstantiateAssets();
@@ -219,21 +220,16 @@ void UnInitGame()
     UnInitSDL();
 }
 
-void UpdateInput(SDL_Event& inputevent)
+void UpdateInput()
 {
-    if (inputevent.key.type == SDL_KEYUP)
-        CurrentPressedKey = inputevent.key.keysym.sym;
-
-    InputInstance->UpdateKeys(inputevent);
-}
-
-void UpdateMouse(SDL_Event& mouseevent)
-{
-    InputInstance->UpdateMouse(mouseevent);
+    InputInstance->Update();
 }
 
 void UpdateLogic(const float delta)
 {
+    //  ESCAPE to exit application.
+    if (InputInstance->KeyPressed(DIK_ESCAPE))
+        QuitRequested = true;
 }
 
 void UpdateGfx(SDL_Renderer* renderer, const float delta)
@@ -255,28 +251,16 @@ void LoopGame()
         case SDL_QUIT:
             QuitRequested = true;
             break;
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
-            UpdateInput(GameWindowEvent);
-            break;
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEMOTION:
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEWHEEL:
-            UpdateMouse(GameWindowEvent);
-            break;
         }
     };
 
-    UpdateLogic(0.f);
-    UpdateGfx(GameRenderer, 0.f);
+    const float FrameDelta = (SDL_GetTicks() - FrameStartTicks) * 0.0001f;
+
+    UpdateInput();
+    UpdateLogic(FrameDelta);
+    UpdateGfx(GameRenderer, FrameDelta);
 
     SDL_RenderPresent(GameRenderer);
-
-    //const uint32_t FrameDelta = (SDL_GetTicks() - FrameStartTicks) | 1;
-    //const float FPS = 1000.f / (float)FrameDelta;
-
-    //std::cout << "FPS: " << FPS << " (" << FrameDelta << "ms)" << std::endl;
 }
 
 int main(const int argc, const char** argv)
