@@ -1,5 +1,4 @@
 #pragma once
-#define SDL_MAIN_HANDLED
 
 #include <string>
 #include <iostream>
@@ -9,9 +8,15 @@
 #include <xxhash.h>
 #include <chrono>
 #include <thread>
-#include <SDL.h>
-#include <SDL_audio.h>
-#include <SDL_syswm.h>
+
+#define _AMD64_
+#include <windef.h>
+
+#define SDL_MAIN_HANDLED
+#define SDL_ENABLE_SYSWM_WINDOWS
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_audio.h>
+#include <SDL3/SDL_syswm.h>
 #include <json.h>
 
 #define DIRECTINPUT_VERSION 0x0800

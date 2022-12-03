@@ -33,6 +33,7 @@ target_include_directories(MyTextGame PRIVATE "src/input/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/xxHash/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/SDL/include/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/jsoncpp/include/json/")
+target_include_directories(MyTextGame PRIVATE "thirdparty/imgui/")
 
 add_subdirectory("thirdparty/xxHash/cmake_unofficial/")
 add_subdirectory("thirdparty/SDL/")
@@ -51,7 +52,12 @@ target_sources(MyTextGame PRIVATE "src/render/Gfx.cpp")
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
 target_link_libraries(MyTextGame PRIVATE "xxhash")
-target_link_libraries(MyTextGame PRIVATE "SDL2")
+
+if (TARGET SDL3::SDL3_main)
+    target_link_libraries(MyTextGame PRIVATE SDL3::SDL3_main)
+endif()
+target_link_libraries(MyTextGame PRIVATE SDL3::SDL3)
+
 target_link_libraries(MyTextGame PRIVATE "jsoncpp_static")
 
 target_link_libraries(MyTextGame PUBLIC "XInput")
@@ -64,13 +70,13 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MyTextGame PROPERTY CXX_STANDARD 20)
 endif()
 
-# For SDL2 - after build is finished, copy output DLL into main project's bin directory.
+# For SDL - after build is finished, copy output DLL into main project's bin directory.
 add_custom_command(
     TARGET MyTextGame
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        $<TARGET_FILE:SDL2>
-        $<TARGET_FILE_DIR:MyTextGame>/$<TARGET_FILE_NAME:SDL2>
+        $<TARGET_FILE:SDL3>
+        $<TARGET_FILE_DIR:MyTextGame>/$<TARGET_FILE_NAME:SDL3>
 )
 
 # Setup testing project.

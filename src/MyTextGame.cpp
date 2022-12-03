@@ -177,26 +177,38 @@ bool InitInput()
 bool InitGfx()
 {
     SDL_SysWMinfo sysWMinfo = {};
-    SDL_GetWindowWMInfo(GameWindow, &sysWMinfo);
+    SDL_GetWindowWMInfo(GameWindow, &sysWMinfo, SDL_SYSWM_CURRENT_VERSION);
 
     return GfxInstance.Init(sysWMinfo.info.win.window, ScreenResolution[0], ScreenResolution[1]);
 }
 
 bool InitGame()
 {
-    TimerScoped timer([](const TimerDurationType& duration) { std::cout << "InitGame done! Took " << duration << std::endl; });
+    TimerScoped timer([](const TimerDurationType& duration) { std::cout << LOGGER_TAG << "InitGame done! Took " << duration << std::endl; });
 
     if (!LoadSettings())
+    {
+        std::cout << LOGGER_TAG << "LoadSettings failed!" << std::endl;
         return false;
+    }
 
     if (!InitSDL())
+    {
+        std::cout << LOGGER_TAG << "InitSDL failed!" << std::endl;
         return false;
+    }
 
     if (!InitGfx())
+    {
+        std::cout << LOGGER_TAG << "InitGfx failed!" << std::endl;
         return false;
+    }
 
     if (!InitInput())
+    {
+        std::cout << LOGGER_TAG << "InitInput failed!" << std::endl;
         return false;
+    }
 
     const uint32_t assetsLoaded = InstantiateAssets();
     std::cout << LOGGER_TAG << "Assets loaded (" << assetsLoaded << "/" << AssetsToLoad.size() << ")" << std::endl;
@@ -212,7 +224,7 @@ bool InitGame()
 
 void UnInitGame()
 {
-    TimerScoped timer([](const TimerDurationType& duration) { std::cout << "UnInitGame done! Took " << duration << std::endl; });
+    TimerScoped timer([](const TimerDurationType& duration) { std::cout << LOGGER_TAG << "UnInitGame done! Took " << duration << std::endl; });
 
     delete InputInstance;
     Settings::Shutdown();
@@ -239,7 +251,7 @@ void UpdateGfx(SDL_Renderer* renderer, const float delta)
 
 void LoopGame()
 {
-    const uint32_t FrameStartTicks = SDL_GetTicks();
+    const Uint64 FrameStartTicks = SDL_GetTicks();
 
     SDL_SetRenderDrawColor(GameRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(GameRenderer);
