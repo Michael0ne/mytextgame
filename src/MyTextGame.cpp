@@ -9,19 +9,12 @@
 #include "KeyboardInput.h"
 #include "GamepadInput.h"
 #include "Gfx.h"
+#include "AssetInterfaceFactory.h"
 
 //  ASSETS
 static AssetLoader& AssetLoaderInstance = AssetLoader::GetInstance();
 static std::vector<AssetInterface*> AssetsList;
-static const std::list<std::string> AssetsToLoad =
-{
-    //  Text
-    "text:intro.txt",
-    "text:menumain.txt",
-    //  Graphics
-    "gfx:title/bg.jpg",
-    "gfx:title/gametitle.jpg"
-};
+static const std::string dataFileName = "files.dat";
 
 //  SDL
 static SDL_Window* GameWindow = nullptr;
@@ -32,44 +25,17 @@ static SDL_Renderer* GameRenderer;
 static SDL_AudioDeviceID GameAudioDeviceId;
 
 //  INPUT
-InputInterface* InputInstance = nullptr;
+static InputInterface* InputInstance = nullptr;
 
 //  GFX
 static Gfx& GfxInstance = Gfx::GetInstance();
-static const uint32_t ScreenResolution[2] = { 800, 600 };
+static uint32_t ScreenResolution[2] = { 800, 600 };
 
-uint32_t InstantiateAssets()
+bool InstantiateAssets()
 {
-    uint32_t assetsLoadedSuccessfully = 0;
-    for (auto it = AssetsToLoad.begin(); it != AssetsToLoad.end(); ++it)
-    {
-        if (!AssetLoaderInstance.OpenAsset(*it))
-            continue;
+    AssetLoader::ParseDataFile(dataFileName, AssetsList);
 
-        assetsLoadedSuccessfully++;
-        AssetInterface* assetInterface = nullptr;
-        //AssetInterfaceFactory assetInterface(AssetLoaderInstance.GetAssetType());
-        switch (AssetLoaderInstance.GetAssetType())
-        {
-        case eAssetType::TEXT:
-            assetInterface = new TextAsset();
-            break;
-        case eAssetType::GFX:
-            assetInterface = new GfxAsset();
-            break;
-        case eAssetType::SOUND:
-            assetInterface = new SoundAsset();
-            break;
-        }
-
-        AssetLoaderInstance.SetAssetRef(assetInterface);
-        assetInterface->ParseData(AssetLoaderInstance.GetDataBufferPtr());
-
-        AssetsList.push_back(assetInterface);
-        AssetLoaderInstance.CloseAsset();
-    }
-
-    return assetsLoadedSuccessfully;
+    return AssetsList.size() > 0;
 }
 
 uint32_t UnloadAssets()
@@ -97,6 +63,14 @@ bool InitSDL()
     {
         std::cout << LOGGER_TAG << "Init error : " << SDL_GetError() << std::endl;
         return false;
+    }
+
+    const uint32_t widthCustom = atoi(Settings::GetValue("width", "").c_str());
+    const uint32_t heightCustom = atoi(Settings::GetValue("height", "").c_str());
+    if (widthCustom > 0 && heightCustom > 0)
+    {
+        ScreenResolution[0] = widthCustom;
+        ScreenResolution[1] = heightCustom;
     }
 
     GameWindow = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ScreenResolution[0], ScreenResolution[1], SDL_WINDOW_OPENGL);
@@ -164,7 +138,7 @@ bool LoadScene()
 
 bool InitInput()
 {
-    const std::string defInputType("keyboard");
+    const std::string defInputType(Settings::GetValue("input", "keyboard"));
     const std::string& inputTypeSetting = Settings::GetValue("InputType", defInputType);
     const XXH64_hash_t inputTypeSettingHash = XXH64(inputTypeSetting.c_str(), inputTypeSetting.length(), NULL);
 
@@ -210,11 +184,13 @@ bool InitGame()
         return false;
     }
 
-    const uint32_t assetsLoaded = InstantiateAssets();
-    std::cout << LOGGER_TAG << "Assets loaded (" << assetsLoaded << "/" << AssetsToLoad.size() << ")" << std::endl;
-
-    if (assetsLoaded < AssetsToLoad.size())
+    if (!InstantiateAssets())
+    {
+        std::cout << LOGGER_TAG << "Unable to load required assets!" << std::endl;
         return false;
+    }
+    else
+        std::cout << LOGGER_TAG << "Loaded " << AssetsList.size() << " asset files" << std::endl;
 
     if (!LoadScene())
         return false;

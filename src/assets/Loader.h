@@ -2,21 +2,21 @@
 
 #include "Generic.h"
 
-const char* const ASSETS_BASE_DIR = "./assets/";
-const char* const ASSET_TEXT_PREFIX = "/text/";
-const char* const ASSET_GFX_PREFIX = "/gfx/";
-const char* const ASSET_SOUND_PREFIX = "/sounds/";
-const size_t assetsBaseDirLength = strlen(ASSETS_BASE_DIR);
-const size_t assetTextPrefixLength = strlen(ASSET_TEXT_PREFIX);
-const size_t assetGfxPrefixLength = strlen(ASSET_GFX_PREFIX);
-const size_t assetSoundPrefixLength = strlen(ASSET_SOUND_PREFIX);
-
-enum class eAssetType : uint64_t
+enum class eAssetType : XXH64_hash_t
 {
     TEXT = 0x80a69b9688ccaf52,  //  Hash for "text".
     GFX = 0x28a480fa8bad468a,    //  Hash for "gfx".
     SOUND = 0x381b96c7a2ec1dff    //  Hash for "sound".
 };
+
+static const std::unordered_map<eAssetType, std::string> AssetPathPrefix =
+{
+    { eAssetType::TEXT, "text/" },
+    { eAssetType::GFX,  "gfx/" },
+    { eAssetType::SOUND, "sound/" }
+};
+
+static const std::string AssetBaseDir = "./assets/";
 
 class AssetInterface;
 
@@ -69,6 +69,7 @@ public:
         const size_t filenameExtensionPosition = path.find_last_of('.');
 
         //  Can't find at least one part that should be in the input - bail out!
+        //  TODO: maybe throw or return false?
         if (typeSeparatorPosition == std::string::npos ||
             filenameStartPosition == std::string::npos ||
             filenameExtensionPosition == std::string::npos)
@@ -80,4 +81,7 @@ public:
         folderPath = path.substr(typeSeparatorPosition + 1, filenameStartPosition - typeSeparatorPosition - 1);
         fileType = (eAssetType)typeHash;
     }
+
+    //  Open data file and instantiate all assets that are within.
+    static void ParseDataFile(const std::string dataFilePath, std::vector<AssetInterface*>& assets);
 };

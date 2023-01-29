@@ -1,5 +1,9 @@
 #include "Loader.h"
 #include "AssetInterface.h"
+#include "AssetInterfaceFactory.h"
+
+#include <iostream>
+#include <fstream>
 
 AssetLoader AssetLoader::Instance;
 
@@ -9,6 +13,7 @@ AssetLoader::AssetLoader()
     FilePtr = nullptr;
     FileDataBuffer = nullptr;
     FileSize = -1;
+    AssetInterfaceRef = nullptr;
 }
 
 AssetLoader::~AssetLoader()
@@ -31,6 +36,73 @@ bool AssetLoader::CloseAsset()
     std::cout << LOGGER_TAG "File released!" << std::endl;
 
     return true;
+}
+
+void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<AssetInterface*>& assets)
+{
+    AssetLoader& instance = GetInstance();
+
+    //  Try and open data file that contains files to be loaded.
+    //  It may also contain included files.
+    std::ifstream dataFileStream(dataFilePath.c_str(), std::ios::in);
+    if (!dataFileStream.is_open())
+    {
+        std::cout << LOGGER_TAG << "Can't open " << dataFilePath << std::endl;
+        return;
+    }
+
+    //  Assuming file is open and good, read and instantiate all referenced assets.
+    uint32_t filesRead = 0; //  How many files we read.
+    uint32_t linesRead = 0; //  How many lines (non-comments, only data lines) we read.
+    std::string buffer;
+    while (std::getline(dataFileStream, buffer, '\n'))
+    {
+        //  Skip comments.
+        if (buffer[0] == '/' && buffer[1] == '/')
+            continue;
+
+        linesRead++;
+
+        //  If it's directive.
+        if (buffer[0] == '#')
+        {
+            //  It's an include. Open and try to parse included file.
+            if (!strncmp(buffer.c_str() + 1, "include", 7))
+            {
+                std::cout << LOGGER_TAG << "Parsing include file " << (buffer.c_str() + 9) << std::endl;
+                ParseDataFile(buffer.c_str() + 9, assets);
+                continue;
+            }
+
+            //  It's a date when this file was modified.
+            if (!strncmp(buffer.c_str() + 1, "date", 4))
+            {
+                uint32_t day, month, year;
+                day = atoi(buffer.substr(6, 2).c_str());
+                month = atoi(buffer.substr(8, 2).c_str());
+                year = atoi(buffer.substr(10, 4).c_str());
+
+                std::cout << LOGGER_TAG << "File modified on " << day << "/" << month << "/" << year << std::endl;
+                continue;
+            }
+        }
+
+        if (!instance.OpenAsset(buffer))
+            continue;
+
+        //  Process asset data and add it to the list.
+        AssetInterface* asset = AssetInterfaceFactory::Create(instance.GetAssetType());
+        instance.SetAssetRef(asset);
+        asset->ParseData(instance.GetDataBufferPtr());
+
+        assets.push_back(asset);
+
+        instance.CloseAsset();
+
+        filesRead++;
+    }
+
+    std::cout << LOGGER_TAG << "Done. Read " << linesRead << " lines with " << filesRead << " file references." << std::endl;
 }
 
 const errno_t AssetLoader::GetError() const
@@ -72,30 +144,19 @@ bool AssetLoader::OpenAsset(const std::string& path)
     AssetTypeHash = XXH64(assetType.c_str(), assetType.length(), NULL);
     AssetType = (eAssetType)AssetTypeHash;
 
-    const char* assetTypeDirStrPtr = nullptr;
-    switch (AssetType)
+    //  Make full path for fopen.
+    try
     {
-    case eAssetType::TEXT:
-        assetTypeDirStrPtr = ASSET_TEXT_PREFIX;
-        break;
-    case eAssetType::GFX:
-        assetTypeDirStrPtr = ASSET_GFX_PREFIX;
-        break;
-    case eAssetType::SOUND:
-        assetTypeDirStrPtr = ASSET_SOUND_PREFIX;
-        break;
-    default:
+        FilePath = AssetBaseDir;
+        FilePath += AssetPathPrefix.at(AssetType);
+        FilePath += path.substr(assetTypeStrColonPos + 1);
+    }
+    catch (std::out_of_range& exception)
+    {
+        std::cout << LOGGER_TAG << "Unsupported asset type \"" << assetType << "\" (" << std::hex << AssetTypeHash << ")" << std::endl;
         return false;
     }
 
-    //  Skip first slash if necessary.
-    if (assetTypeDirStrPtr[0] == '/' && ASSETS_BASE_DIR[assetsBaseDirLength - 1] == '/')
-        assetTypeDirStrPtr++;
-
-    //  Make full path for fopen.
-    FilePath = ASSETS_BASE_DIR;
-    FilePath += assetTypeDirStrPtr;
-    FilePath += path.substr(assetTypeStrColonPos + 1);
     FileOpenStatus = fopen_s(&FilePtr, FilePath.c_str(), "r");
 
     if (FileOpenStatus)
@@ -113,7 +174,7 @@ bool AssetLoader::OpenAsset(const std::string& path)
     memset(FileDataBuffer, NULL, FileSize);
     fread_s(FileDataBuffer, FileSize, FileSize, 1, FilePtr);
 
-    std::cout << LOGGER_TAG "Open \"" << FileName << "\" successful, size = " << FileSize << std::endl;
+    std::cout << LOGGER_TAG << FileName << " (" << FileSize << " bytes) -- OK" << std::endl;
 
     return true;
 }
