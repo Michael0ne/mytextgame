@@ -101,7 +101,7 @@ bool InitSDL()
         return false;
     }
 
-    GameRenderer = SDL_CreateRenderer(GameWindow, -1, SDL_RENDERER_ACCELERATED);
+    GameRenderer = SDL_CreateRenderer(GameWindow, NULL, SDL_RENDERER_ACCELERATED);
     if (!GameRenderer)
     {
         std::cout << LOGGER_TAG << "Can't create renderer! " << SDL_GetError() << std::endl;
@@ -236,7 +236,7 @@ void LoopGame()
     {
         switch (GameWindowEvent.type)
         {
-        case SDL_QUIT:
+        case SDL_EVENT_QUIT:
             QuitRequested = true;
             break;
         }
