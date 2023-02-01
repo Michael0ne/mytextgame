@@ -32,7 +32,7 @@ class InputInterface
 {
 private:
     eInputType      InputType;
-    bool            IsValid;
+    bool            IsValidInstance;
     InputInstance  *Instance;
 
 public:
@@ -43,9 +43,9 @@ public:
         delete Instance;
     }
 
-    inline const bool  Valid() const
+    inline const bool  IsValid() const
     {
-        return IsValid;
+        return IsValidInstance;
     }
 
     void Update();

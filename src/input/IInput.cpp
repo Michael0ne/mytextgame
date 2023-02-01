@@ -4,7 +4,7 @@
 
 InputInterface::InputInterface(const eInputType inputType, const WindowHandle windowHandle)
 {
-    IsValid = true;
+    IsValidInstance = true;
     InputType = inputType;
     Instance = nullptr;
 
@@ -17,11 +17,11 @@ InputInterface::InputInterface(const eInputType inputType, const WindowHandle wi
         Instance = new GamepadInput;
         break;
     default:
-        IsValid = false;
+        IsValidInstance = false;
         break;
     }
 
-    std::cout << LOGGER_TAG << "IsValid = " << IsValid << std::endl;
+    std::cout << LOGGER_TAG << "IsValidInstance = " << IsValidInstance << std::endl;
 }
 
 /// <summary>

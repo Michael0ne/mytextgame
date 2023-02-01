@@ -6,7 +6,7 @@
 class AssetInterface
 {
     std::string         Name;
-    XXH64_hash_t        NameHash;
+    HashType            NameHash;
 
 public:
     virtual         ~AssetInterface() {};
@@ -15,7 +15,7 @@ public:
     void            SetData(const std::string& name)
     {
         Name = name;
-        NameHash = XXH64(name.c_str(), name.length(), NULL);
+        NameHash = xxh64::hash(name.c_str(), name.length(), 0);
     }
 
     template <class C>

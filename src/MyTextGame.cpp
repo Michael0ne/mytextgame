@@ -138,14 +138,13 @@ bool LoadScene()
 
 bool InitInput()
 {
-    const std::string defInputType(Settings::GetValue("input", "keyboard"));
-    const std::string& inputTypeSetting = Settings::GetValue("InputType", defInputType);
-    const XXH64_hash_t inputTypeSettingHash = XXH64(inputTypeSetting.c_str(), inputTypeSetting.length(), NULL);
+    const std::string inputTypeSetting = Settings::GetValue("input", "keyboard");
+    const HashType inputTypeSettingHash = xxh64::hash(inputTypeSetting.c_str(), inputTypeSetting.length(), NULL);
 
-    std::cout << LOGGER_TAG << "Input type selected: " << inputTypeSetting << " (" << std::hex << inputTypeSettingHash << std::dec << ")" << std::endl;
+    std::cout << LOGGER_TAG << "InputType: " << inputTypeSetting << std::endl;
 
     InputInstance = new InputInterface((eInputType)inputTypeSettingHash, GfxInstance.GetWindowHandle());
-    return InputInstance->Valid();
+    return InputInstance->IsValid();
 }
 
 bool InitGfx()
@@ -186,14 +185,15 @@ bool InitGame()
 
     if (!InstantiateAssets())
     {
-        std::cout << LOGGER_TAG << "Unable to load required assets!" << std::endl;
+        std::cout << LOGGER_TAG << "InstantiateAssets failed!" << std::endl;
         return false;
     }
-    else
-        std::cout << LOGGER_TAG << "Loaded " << AssetsList.size() << " asset files" << std::endl;
 
     if (!LoadScene())
+    {
+        std::cout << LOGGER_TAG << "LoadScene failed!" << std::endl;
         return false;
+    }
 
     return true;
 }

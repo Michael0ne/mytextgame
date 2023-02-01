@@ -30,12 +30,11 @@ target_include_directories(MyTextGame PRIVATE "src/audio/")
 target_include_directories(MyTextGame PRIVATE "src/render/")
 target_include_directories(MyTextGame PRIVATE "src/system/")
 target_include_directories(MyTextGame PRIVATE "src/input/")
-target_include_directories(MyTextGame PRIVATE "thirdparty/xxHash/")
+target_include_directories(MyTextGame PRIVATE "thirdparty/xxhashct")
 target_include_directories(MyTextGame PRIVATE "thirdparty/SDL/include/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/jsoncpp/include/json/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/imgui/")
 
-add_subdirectory("thirdparty/xxHash/cmake_unofficial/")
 add_subdirectory("thirdparty/SDL/")
 add_subdirectory("thirdparty/jsoncpp/")
 
@@ -50,8 +49,6 @@ target_sources(MyTextGame PRIVATE "src/input/IInput.cpp")
 target_sources(MyTextGame PRIVATE "src/render/Gfx.cpp")
 
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
-
-target_link_libraries(MyTextGame PRIVATE "xxhash")
 
 if (TARGET SDL3::SDL3_main)
     target_link_libraries(MyTextGame PRIVATE SDL3::SDL3_main)

@@ -2,11 +2,16 @@
 
 #include "Generic.h"
 
-enum class eAssetType : XXH64_hash_t
+enum class eAssetType : HashType
 {
-    TEXT = 0x80a69b9688ccaf52,  //  Hash for "text".
-    GFX = 0x28a480fa8bad468a,    //  Hash for "gfx".
-    SOUND = 0x381b96c7a2ec1dff    //  Hash for "sound".
+    TEXT = xxh64::hash("text", 4, 0),
+    GFX = xxh64::hash("gfx", 3, 0),
+    SOUND = xxh64::hash("sound", 5, 0),
+    SCRIPT = xxh64::hash("script", 6, 0)
+    //TEXT = 0x80a69b9688ccaf52,      //  Hash for "text".
+    //GFX = 0x28a480fa8bad468a,       //  Hash for "gfx".
+    //SOUND = 0x381b96c7a2ec1dff,     //  Hash for "sound".
+    //SCRIPT = 0xcf7e685ca7386f66     //  Hash for "script".
 };
 
 static const std::unordered_map<eAssetType, std::string> AssetPathPrefix =
@@ -30,7 +35,7 @@ class AssetLoader
     long        FileSize;
 
     eAssetType      AssetType;
-    XXH64_hash_t    AssetTypeHash;
+    HashType        AssetTypeHash;
     AssetInterface *AssetInterfaceRef;
 
     AssetLoader();
@@ -75,7 +80,7 @@ public:
             filenameExtensionPosition == std::string::npos)
             return;
 
-        const XXH64_hash_t typeHash = XXH64(path.data(), typeSeparatorPosition, NULL);
+        const HashType typeHash = xxh64::hash(path.data(), path.size(), 0);
         fileName = path.substr(filenameStartPosition + 1, filenameExtensionPosition - filenameStartPosition - 1);
         fileExtension = path.substr(filenameExtensionPosition + 1);
         folderPath = path.substr(typeSeparatorPosition + 1, filenameStartPosition - typeSeparatorPosition - 1);

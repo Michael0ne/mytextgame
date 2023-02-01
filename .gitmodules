@@ -7,9 +7,9 @@
 [submodule "thirdparty/SDL"]
 	path = thirdparty/SDL
 	url = https://github.com/libsdl-org/SDL.git
-[submodule "thirdparty/xxHash"]
-	path = thirdparty/xxHash
-	url = https://github.com/Cyan4973/xxHash.git
 [submodule "thirdparty/imgui"]
 	path = thirdparty/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "thirdparty/xxhashct"]
+	path = thirdparty/xxhashct
+	url = https://github.com/ekpyron/xxhashct.git

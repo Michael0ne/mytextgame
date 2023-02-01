@@ -33,8 +33,6 @@ bool AssetLoader::CloseAsset()
     delete[] FileDataBuffer;
     FileSize = -1;
 
-    std::cout << LOGGER_TAG "File released!" << std::endl;
-
     return true;
 }
 
@@ -50,6 +48,8 @@ void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<Asse
         std::cout << LOGGER_TAG << "Can't open " << dataFilePath << std::endl;
         return;
     }
+
+    std::cout << LOGGER_TAG << "Reading DATA \"" << dataFilePath << "\"" << std::endl;
 
     //  Assuming file is open and good, read and instantiate all referenced assets.
     uint32_t filesRead = 0; //  How many files we read.
@@ -69,7 +69,7 @@ void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<Asse
             //  It's an include. Open and try to parse included file.
             if (!strncmp(buffer.c_str() + 1, "include", 7))
             {
-                std::cout << LOGGER_TAG << "Parsing include file " << (buffer.c_str() + 9) << std::endl;
+                std::cout << LOGGER_TAG << "Parsing include \"" << (buffer.c_str() + 9) << "\"" << std::endl;
                 ParseDataFile(buffer.c_str() + 9, assets);
                 continue;
             }
@@ -102,7 +102,7 @@ void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<Asse
         filesRead++;
     }
 
-    std::cout << LOGGER_TAG << "Done. Read " << linesRead << " lines with " << filesRead << " file references." << std::endl;
+    std::cout << LOGGER_TAG << "Reading DATA done. " << linesRead << " lines, " << filesRead << " file references." << std::endl;
 }
 
 const errno_t AssetLoader::GetError() const
@@ -141,7 +141,7 @@ bool AssetLoader::OpenAsset(const std::string& path)
 
     //  Record what asset type has been requested. Extension is not important.
     std::string assetType = path.substr(0, assetTypeStrColonPos);
-    AssetTypeHash = XXH64(assetType.c_str(), assetType.length(), NULL);
+    AssetTypeHash = xxh64::hash(assetType.c_str(), assetType.length(), 0);
     AssetType = (eAssetType)AssetTypeHash;
 
     //  Make full path for fopen.
@@ -153,7 +153,7 @@ bool AssetLoader::OpenAsset(const std::string& path)
     }
     catch (std::out_of_range& exception)
     {
-        std::cout << LOGGER_TAG << "Unsupported asset type \"" << assetType << "\" (" << std::hex << AssetTypeHash << ")" << std::endl;
+        std::cout << LOGGER_TAG << "Error: unknown asset type \"" << assetType << "\"" << std::endl;
         return false;
     }
 
@@ -174,7 +174,7 @@ bool AssetLoader::OpenAsset(const std::string& path)
     memset(FileDataBuffer, NULL, FileSize);
     fread_s(FileDataBuffer, FileSize, FileSize, 1, FilePtr);
 
-    std::cout << LOGGER_TAG << FileName << " (" << FileSize << " bytes) -- OK" << std::endl;
+    std::cout << LOGGER_TAG << "File: " << FileName << " (" << FileSize << " bytes) -- OK" << std::endl;
 
     return true;
 }

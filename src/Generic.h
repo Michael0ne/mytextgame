@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
-#include <xxhash.h>
+#include <xxh64.hpp>
 #include <chrono>
 #include <thread>
 
@@ -23,5 +23,6 @@
 #include <dinput.h>
 
 using WindowHandle = HWND;
+using HashType = uint64_t;
 
 #define LOGGER_TAG "[" << __FILE__ << ":" << __func__ << ":" << __LINE__ << "] "

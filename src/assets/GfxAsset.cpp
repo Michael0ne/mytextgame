@@ -10,4 +10,5 @@ GfxAsset::~GfxAsset()
 
 void GfxAsset::ParseData(const uint8_t* data)
 {
+
 }

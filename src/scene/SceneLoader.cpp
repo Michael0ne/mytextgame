@@ -4,7 +4,7 @@
 
 SceneLoader::SceneLoader(const std::string& fileName)
 {
-    HasOpen = false;
+    IsFileOpen = false;
 
     if (fileName.empty())
     {
@@ -29,7 +29,7 @@ SceneLoader::SceneLoader(const std::string& fileName)
         return;
     }
 
-    HasOpen = true;
+    IsFileOpen = true;
 }
 
 const Json::Value& SceneLoader::GetSectionValue(const std::string& sectionName) const

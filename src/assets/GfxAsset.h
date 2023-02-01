@@ -4,6 +4,8 @@
 
 class GfxAsset : public AssetInterface
 {
+private:
+
 public:
     GfxAsset();
 

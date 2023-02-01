@@ -13,12 +13,12 @@ private:
     bool HasChanges;
     uint32_t LinesRead;
 
-    static std::unordered_map<XXH64_hash_t, std::string> PredefinedTokens;
+    static std::unordered_map<HashType, std::string> PredefinedTokens;
 
     void ParseTokenValue(std::string& val)
     {
         //  Possibly, insert additional 'search' functions here to find token value anywhere in the engine.
-        const XXH64_hash_t tokenHash = XXH64(val.c_str() + 1, val.length() - 1, NULL);
+        const HashType tokenHash = xxh64::hash(val.c_str() + 1, val.length() - 1, NULL);
         try
         {
             val = PredefinedTokens.at(tokenHash);
@@ -176,7 +176,7 @@ public:
 };
 
 Settings* Settings::Instance = nullptr;
-std::unordered_map<XXH64_hash_t, std::string> Settings::PredefinedTokens =
+std::unordered_map<HashType, std::string> Settings::PredefinedTokens =
 {
     { 0x0840acdf6fe13b74, "1920" },
     { 0xd93c80b41d41202f, "1080" }

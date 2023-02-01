@@ -5,7 +5,7 @@ class SceneLoader
 private:
     Json::Value     RootValue;
 
-    bool            HasOpen;
+    bool            IsFileOpen;
 
 public:
     SceneLoader(const std::string& fileName);
@@ -13,6 +13,6 @@ public:
     const Json::Value& GetSectionValue(const std::string& sectionName) const;
     inline const bool IsOpen() const
     {
-        return HasOpen;
+        return IsFileOpen;
     }
 };
