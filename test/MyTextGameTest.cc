@@ -1,9 +1,10 @@
 #include <gtest/gtest.h>
+#include <math.h>
 
 //  Test math lib here.
 TEST(BasicMathTest, BasicAssertions)
 {
-    EXPECT_EQ(sqrtf(9), 3.f);
+    EXPECT_EQ(sqrt(9), 3.f);
     EXPECT_NE(2 * 2, 5);
 }
 

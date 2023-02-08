@@ -8,10 +8,6 @@ enum class eAssetType : HashType
     GFX = xxh64::hash("gfx", 3, 0),
     SOUND = xxh64::hash("sound", 5, 0),
     SCRIPT = xxh64::hash("script", 6, 0)
-    //TEXT = 0x80a69b9688ccaf52,      //  Hash for "text".
-    //GFX = 0x28a480fa8bad468a,       //  Hash for "gfx".
-    //SOUND = 0x381b96c7a2ec1dff,     //  Hash for "sound".
-    //SCRIPT = 0xcf7e685ca7386f66     //  Hash for "script".
 };
 
 static const std::unordered_map<eAssetType, std::string> AssetPathPrefix =
@@ -27,7 +23,7 @@ class AssetInterface;
 
 class AssetLoader
 {
-    errno_t     FileOpenStatus;
+    FileErrorType   FileOpenStatus;
     std::string FilePath;
     std::string FileName;
     FILE       *FilePtr;
@@ -44,7 +40,7 @@ class AssetLoader
     static AssetLoader  Instance;
 
 public:
-    const errno_t   GetError() const;
+    const FileErrorType GetError() const;
     const eAssetType    GetAssetType() const;
     inline const uint8_t* GetDataBufferPtr() const
     {

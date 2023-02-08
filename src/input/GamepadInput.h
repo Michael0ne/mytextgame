@@ -1,7 +1,5 @@
 #pragma once
 #include "IInput.h"
-#define _AMD64_
-#include <Xinput.h>
 
 /// <summary>
 /// Do not use this class directly!
@@ -18,53 +16,44 @@ private:
     vec2packed  ThumbLeft;
     vec2packed  ThumbRight;
 
-    XINPUT_STATE    XInputState;
+    SDL_Gamepad*    GamepadObject;
 
 public:
     GamepadInput()
     {
-        memset(&XInputState, NULL, sizeof(XINPUT_STATE));
-
-        Buttons = NULL;
-        LeftTrigger = NULL;
-        RightTrigger = NULL;
+        Buttons = 0;
+        LeftTrigger = 0;
+        RightTrigger = 0;
         ThumbLeft = { 0, 0 };
         ThumbRight = { 0, 0 };
+
+        //TODO: enumerate gamepads and init GamepadObject.
     }
 
     virtual ~GamepadInput()
     {
+        //TODO: close active GamepadObject instance.
     }
 
     virtual uint32_t    GetKeyState(const KeyCodeType key) override
     {
-        if (key < XINPUT_GAMEPAD_Y && key > XINPUT_GAMEPAD_DPAD_UP)
-            return Buttons & key;
-        else
-            return NULL;
+        //TODO: get active GamepadObject key state.
+        return 0;
     }
 
     virtual uint32_t    GetMouseState(const KeyCodeType button) override
     {
-        return NULL;
+        return 0;
     }
 
     virtual void    Update() override
     {
-        Buttons = NULL;
-        LeftTrigger = NULL;
-        RightTrigger = NULL;
+        Buttons = 0;
+        LeftTrigger = 0;
+        RightTrigger = 0;
         ThumbLeft = { 0, 0 };
         ThumbRight = { 0, 0 };
 
-        if (!XInputGetState(0, &XInputState))
-        {
-            Buttons = XInputState.Gamepad.wButtons;
-            LeftTrigger = XInputState.Gamepad.bLeftTrigger;
-            RightTrigger = XInputState.Gamepad.bRightTrigger;
-
-            ThumbLeft = { XInputState.Gamepad.sThumbLX, XInputState.Gamepad.sThumbLY };
-            ThumbRight = { XInputState.Gamepad.sThumbRX, XInputState.Gamepad.sThumbRY };
-        }
+        //TODO: update active GamepadObject state and see if it's still alive. Handle disconnect.
     }
 };

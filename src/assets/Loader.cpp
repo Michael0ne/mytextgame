@@ -105,7 +105,7 @@ void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<Asse
     std::cout << LOGGER_TAG << "Reading DATA done. " << linesRead << " lines, " << filesRead << " file references." << std::endl;
 }
 
-const errno_t AssetLoader::GetError() const
+const FileErrorType AssetLoader::GetError() const
 {
     return FileOpenStatus;
 }
@@ -157,7 +157,9 @@ bool AssetLoader::OpenAsset(const std::string& path)
         return false;
     }
 
-    FileOpenStatus = fopen_s(&FilePtr, FilePath.c_str(), "r");
+    FilePtr = fopen(FilePath.c_str(), "r");
+    if (!FilePtr)
+        FileOpenStatus = EXIT_FAILURE;
 
     if (FileOpenStatus)
     {
@@ -171,8 +173,8 @@ bool AssetLoader::OpenAsset(const std::string& path)
     rewind(FilePtr);
 
     FileDataBuffer = new uint8_t[FileSize];
-    memset(FileDataBuffer, NULL, FileSize);
-    fread_s(FileDataBuffer, FileSize, FileSize, 1, FilePtr);
+    memset(FileDataBuffer, 0, FileSize);
+    fread(FileDataBuffer, FileSize, 1, FilePtr);
 
     std::cout << LOGGER_TAG << "File: " << FileName << " (" << FileSize << " bytes) -- OK" << std::endl;
 

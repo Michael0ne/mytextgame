@@ -38,6 +38,8 @@ target_include_directories(MyTextGame PRIVATE "thirdparty/imgui/")
 add_subdirectory("thirdparty/SDL/")
 add_subdirectory("thirdparty/jsoncpp/")
 
+target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
+
 target_sources(MyTextGame PRIVATE "src/MyTextGame.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/Loader.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/TextAsset.cpp")
@@ -48,18 +50,12 @@ target_sources(MyTextGame PRIVATE "src/scene/SceneLoader.cpp")
 target_sources(MyTextGame PRIVATE "src/input/IInput.cpp")
 target_sources(MyTextGame PRIVATE "src/render/Gfx.cpp")
 
-target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
-
 if (TARGET SDL3::SDL3_main)
     target_link_libraries(MyTextGame PRIVATE SDL3::SDL3_main)
 endif()
 target_link_libraries(MyTextGame PRIVATE SDL3::SDL3)
 
 target_link_libraries(MyTextGame PRIVATE "jsoncpp_static")
-
-target_link_libraries(MyTextGame PUBLIC "XInput")
-target_link_libraries(MyTextGame PUBLIC "dxguid")
-target_link_libraries(MyTextGame PUBLIC "dinput8")
 
 set(CMAKE_BUILD_PARALLEL_LEVEL 4)
 

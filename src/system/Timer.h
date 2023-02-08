@@ -12,7 +12,7 @@ struct TimerInterface
     friend struct TimerScoped;
     friend struct TimerUnscoped;
 protected:
-    typedef std::chrono::steady_clock::time_point TimerTimeType;
+    typedef std::chrono::high_resolution_clock::time_point TimerTimeType;
 
     TimerTimeType       TimeStart;
     TimerTimeType       TimeEnd;

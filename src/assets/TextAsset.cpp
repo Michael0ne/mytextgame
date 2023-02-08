@@ -10,22 +10,21 @@ TextAsset::~TextAsset()
 
 void TextAsset::ParseData(const uint8_t* data)
 {
-    char* nextToken = nullptr;
     char* currentToken = nullptr;
 
-    currentToken = strtok_s((char*)data, "\n", &nextToken);
+    currentToken = strtok((char*)data, "\n");
     while (currentToken)
     {
         if (currentToken[0] != '#')
         {
             const size_t keyLength = strchr(currentToken, '=') - currentToken;
 
-            const HashType keyHash = xxh64::hash(currentToken, keyLength, NULL);
+            const HashType keyHash = xxh64::hash(currentToken, keyLength, 0);
             const std::string value(currentToken + keyLength + 1);
 
             TextValues.emplace(std::make_pair(keyHash, value));
         }
-        currentToken = strtok_s(nullptr, "\n", &nextToken);
+        currentToken = strtok(nullptr, "\n");
     }
 
     std::cout << LOGGER_TAG << "Read " << TextValues.size() << " tokens" << std::endl;
@@ -38,6 +37,6 @@ const std::string& TextAsset::GetKeyValue(const HashType keyHash) const
 
 const std::string& TextAsset::GetKeyValue(const std::string& key) const
 {
-    const HashType keyHash = xxh64::hash(key.c_str(), key.length(), NULL);
+    const HashType keyHash = xxh64::hash(key.c_str(), key.length(), 0);
     return TextValues.at(keyHash);
 }

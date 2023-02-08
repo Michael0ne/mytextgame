@@ -7,137 +7,52 @@
 /// </summary>
 class KeyboardInput : public InputInstance
 {
-    #define MAX_KEYBOARD_KEYS   256
-    #define MAX_MOUSE_BUTTONS   8
-
 private:
-    BYTE        Keys[MAX_KEYBOARD_KEYS];
-    uint8_t     MouseButtons[MAX_MOUSE_BUTTONS];
-    LONG        MouseX;
-    LONG        MouseY;
-    LONG        MouseWheel;
-
-    LPDIRECTINPUT8          DInputInterface;
-    LPDIRECTINPUTDEVICE8    KeyboardInputDevice;
-    LPDIRECTINPUTDEVICE8    MouseInputDevice;
+    uint8_t    *Keys;
+    union
+    {
+        struct
+        {
+            unsigned    LeftButton;
+            unsigned    MiddleButton;
+            unsigned    RightButton;
+            unsigned    X1Button;
+            unsigned    X2Button;
+        }           StateBits;
+        uint32_t    State;
+    }           MouseState;
+    float       MousePosX;
+    float       MousePosY;
+    uint32_t    MouseWheel;
 
 public:
     KeyboardInput(const WindowHandle windowHandle)
     {
-        if (!windowHandle)
-            DebugBreak();
-
-        memset(Keys, NULL, MAX_KEYBOARD_KEYS);
-        memset(MouseButtons, NULL, MAX_MOUSE_BUTTONS);
-
-        DInputInterface = nullptr;
-        KeyboardInputDevice = nullptr;
-        MouseInputDevice = nullptr;
-
-        if (FAILED(DirectInput8Create(GetModuleHandle(nullptr), DIRECTINPUT_VERSION, IID_IDirectInput8, (LPVOID*)&DInputInterface, NULL)))
-            throw new std::exception("Interface for DirectInput could not be obtained!");
-
-        if (FAILED(DInputInterface->CreateDevice(GUID_SysKeyboard, &KeyboardInputDevice, NULL)))
-            throw new std::exception("Keyboard device could not be created!");
-
-        if (FAILED(DInputInterface->CreateDevice(GUID_SysMouse, &MouseInputDevice, NULL)))
-            throw new std::exception("Mouse device could not be created!");
-
-        if (FAILED(KeyboardInputDevice->SetDataFormat(&c_dfDIKeyboard)))
-            throw new std::exception("Can't set keyboard data format!");
-
-        if (FAILED(MouseInputDevice->SetDataFormat(&c_dfDIMouse2)))
-            throw new std::exception("Can't set mouse data format!");
-
-        if (FAILED(KeyboardInputDevice->SetCooperativeLevel(windowHandle, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
-            throw new std::exception("Can't set keyboard cooperative level!");
-
-        if (FAILED(MouseInputDevice->SetCooperativeLevel(windowHandle, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
-            throw new std::exception("Can't set mouse cooperative level!");
-
-        DIDEVCAPS DIKeyboardCaps = {};
-        DIDEVCAPS DIMouseCaps = {};
-        DIKeyboardCaps.dwSize = sizeof(DIDEVCAPS);
-        DIMouseCaps.dwSize = sizeof(DIDEVCAPS);
-
-        if (FAILED(KeyboardInputDevice->GetCapabilities(&DIKeyboardCaps)))
-            throw new std::exception("Could not get keyboard capabilities!");
-
-        if (FAILED(MouseInputDevice->GetCapabilities(&DIMouseCaps)))
-            throw new std::exception("Could not get mouse device capabilities!");
-
-        if (!(DIKeyboardCaps.dwFlags & DIDC_ATTACHED))
-            throw new std::exception("Keyboard is not attached!");
-
-        if (!(DIMouseCaps.dwFlags & DIDC_ATTACHED))
-            throw new std::exception("Mouse is not attached!");
-
-        KeyboardInputDevice->Acquire();
-        MouseInputDevice->Acquire();
+        Keys = nullptr;
+        MouseState.State = 0;
+        MousePosX = 0.f;
+        MousePosY = 0.f;
+        MouseWheel = 0;
     }
 
     virtual ~KeyboardInput()
     {
-        if (MouseInputDevice)
-        {
-            MouseInputDevice->Unacquire();
-            MouseInputDevice->Release();
-        }
-
-        if (KeyboardInputDevice)
-        {
-            KeyboardInputDevice->Unacquire();
-            KeyboardInputDevice->Release();
-        }
-
-        if (DInputInterface)
-            DInputInterface->Release();
     }
 
     virtual uint32_t    GetKeyState(const KeyCodeType key) override
     {
-        if (key > MAX_KEYBOARD_KEYS)
-            return NULL;
-        else
-            return Keys[key] & 0x80;
+        return (Keys[key] & 1);
     }
 
     virtual uint32_t    GetMouseState(const KeyCodeType button) override
     {
-        if (button > MAX_MOUSE_BUTTONS)
-            return NULL;
-        else
-            return MouseButtons[button] & 0x80;
+        return (MouseState.State & SDL_BUTTON(button));
     }
 
+    //  This will only update the keyboard state and mouse state.
     virtual void    Update() override
     {
-        if (FAILED(KeyboardInputDevice->GetDeviceState(MAX_KEYBOARD_KEYS, Keys)))
-        {
-            memset(Keys, NULL, MAX_KEYBOARD_KEYS);
-
-            HRESULT keyboardAcquireResult = KeyboardInputDevice->Acquire();
-            while (keyboardAcquireResult == DIERR_INPUTLOST)
-                keyboardAcquireResult = KeyboardInputDevice->Acquire();
-
-            return;
-        }
-
-        DIMOUSESTATE2 DIMouseState = {};
-        if (FAILED(MouseInputDevice->GetDeviceState(sizeof(DIMOUSESTATE2), &DIMouseState)))
-        {
-            memset(MouseButtons, NULL, MAX_MOUSE_BUTTONS);
-
-            HRESULT mouseAcquireResult = MouseInputDevice->Acquire();
-            while (mouseAcquireResult == DIERR_INPUTLOST)
-                mouseAcquireResult = MouseInputDevice->Acquire();
-
-            return;
-        }
-
-        memcpy(MouseButtons, DIMouseState.rgbButtons, MAX_MOUSE_BUTTONS);
-        MouseX = DIMouseState.lX;
-        MouseY = DIMouseState.lY;
-        MouseWheel = DIMouseState.lZ;
+        MouseState.State = SDL_GetMouseState(&MousePosX, &MousePosY);
+        Keys = const_cast<uint8_t*>(SDL_GetKeyboardState(nullptr));
     }
 };

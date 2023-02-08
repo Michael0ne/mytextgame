@@ -35,7 +35,8 @@ bool InstantiateAssets()
 {
     AssetLoader::ParseDataFile(dataFileName, AssetsList);
 
-    return AssetsList.size() > 0;
+    // return AssetsList.size() > 0;
+    return true;
 }
 
 uint32_t UnloadAssets()
@@ -73,7 +74,7 @@ bool InitSDL()
         ScreenResolution[1] = heightCustom;
     }
 
-    GameWindow = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ScreenResolution[0], ScreenResolution[1], SDL_WINDOW_OPENGL);
+    GameWindow = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ScreenResolution[0], ScreenResolution[1], 0);
     if (!GameWindow)
     {
         std::cout << LOGGER_TAG << "Window create error: " << SDL_GetError() << std::endl;
@@ -101,7 +102,7 @@ bool InitSDL()
         return false;
     }
 
-    GameRenderer = SDL_CreateRenderer(GameWindow, NULL, SDL_RENDERER_ACCELERATED);
+    GameRenderer = SDL_CreateRenderer(GameWindow, NULL, 0);
     if (!GameRenderer)
     {
         std::cout << LOGGER_TAG << "Can't create renderer! " << SDL_GetError() << std::endl;
@@ -139,7 +140,7 @@ bool LoadScene()
 bool InitInput()
 {
     const std::string inputTypeSetting = Settings::GetValue("input", "keyboard");
-    const HashType inputTypeSettingHash = xxh64::hash(inputTypeSetting.c_str(), inputTypeSetting.length(), NULL);
+    const HashType inputTypeSettingHash = xxh64::hash(inputTypeSetting.c_str(), inputTypeSetting.length(), 0);
 
     std::cout << LOGGER_TAG << "InputType: " << inputTypeSetting << std::endl;
 
@@ -152,7 +153,13 @@ bool InitGfx()
     SDL_SysWMinfo sysWMinfo = {};
     SDL_GetWindowWMInfo(GameWindow, &sysWMinfo, SDL_SYSWM_CURRENT_VERSION);
 
+#ifdef __linux__
+    return GfxInstance.Init(sysWMinfo.info.wl.display, ScreenResolution[0], ScreenResolution[1]);
+#elif WIN32
     return GfxInstance.Init(sysWMinfo.info.win.window, ScreenResolution[0], ScreenResolution[1]);
+#else
+    return false;
+#endif
 }
 
 bool InitGame()
@@ -216,7 +223,7 @@ void UpdateInput()
 void UpdateLogic(const float delta)
 {
     //  ESCAPE to exit application.
-    if (InputInstance->KeyPressed(DIK_ESCAPE))
+    if (InputInstance->KeyPressed(SDLK_ESCAPE))
         QuitRequested = true;
 }
 

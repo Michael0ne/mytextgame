@@ -18,7 +18,7 @@ private:
     void ParseTokenValue(std::string& val)
     {
         //  Possibly, insert additional 'search' functions here to find token value anywhere in the engine.
-        const HashType tokenHash = xxh64::hash(val.c_str() + 1, val.length() - 1, NULL);
+        const HashType tokenHash = xxh64::hash(val.c_str() + 1, val.length() - 1, 0);
         try
         {
             val = PredefinedTokens.at(tokenHash);
