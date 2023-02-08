@@ -39,6 +39,6 @@
 using HashType = uint64_t;
 using FileErrorType = int32_t;
 using WindowHandle = wl_display*;
-using KeyCodeType = SDL_KeyCode;
+using KeyCodeType = SDL_Scancode;
 
 #define LOGGER_TAG "[" << __FILE__ << ":" << __func__ << ":" << __LINE__ << "] "

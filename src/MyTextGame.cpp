@@ -223,7 +223,7 @@ void UpdateInput()
 void UpdateLogic(const float delta)
 {
     //  ESCAPE to exit application.
-    if (InputInstance->KeyPressed(SDLK_ESCAPE))
+    if (InputInstance->KeyPressed(SDL_SCANCODE_ESCAPE))
         QuitRequested = true;
 }
 

@@ -51,6 +51,9 @@ public:
     {
         if (!Instance)
             return false;
+
+        if (keyCode >= SDL_BUTTON_LEFT && keyCode <= SDL_BUTTON_RIGHT)
+            return Instance->GetMouseState(keyCode);
         else
             return Instance->GetKeyState(keyCode);
     }

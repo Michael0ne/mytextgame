@@ -8,7 +8,7 @@
 class KeyboardInput : public InputInstance
 {
 private:
-    uint8_t    *Keys;
+    const uint8_t    *Keys;
     union
     {
         struct
@@ -53,6 +53,6 @@ public:
     virtual void    Update() override
     {
         MouseState.State = SDL_GetMouseState(&MousePosX, &MousePosY);
-        Keys = const_cast<uint8_t*>(SDL_GetKeyboardState(nullptr));
+        Keys = SDL_GetKeyboardState(nullptr);
     }
 };
