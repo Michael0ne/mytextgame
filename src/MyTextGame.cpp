@@ -5,7 +5,6 @@
 #include "GfxAsset.h"
 #include "SoundAsset.h"
 #include "Settings.h"
-#include "SceneLoader.h"
 #include "KeyboardInput.h"
 #include "GamepadInput.h"
 #include "Gfx.h"
@@ -129,14 +128,6 @@ bool LoadSettings()
     return Settings::IsOpen();
 }
 
-bool LoadScene()
-{
-    SceneLoader sceneLoader("assets/menu.scene");
-    const Json::Value& menu = sceneLoader.GetSectionValue("menu");
-
-    return sceneLoader.IsOpen();
-}
-
 bool InitInput()
 {
     const std::string inputTypeSetting = Settings::GetValue("input", "keyboard");
@@ -193,12 +184,6 @@ bool InitGame()
     if (!InstantiateAssets())
     {
         std::cout << LOGGER_TAG << "InstantiateAssets failed!" << std::endl;
-        return false;
-    }
-
-    if (!LoadScene())
-    {
-        std::cout << LOGGER_TAG << "LoadScene failed!" << std::endl;
         return false;
     }
 

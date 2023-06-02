@@ -119,6 +119,7 @@ void AssetLoader::SetAssetRef(AssetInterface* assetInterface)
 {
     AssetInterfaceRef = assetInterface;
     assetInterface->SetData(FilePath);
+    assetInterface->SetDataSize(FileSize);
 }
 
 bool AssetLoader::OpenAsset(const std::string& path)
@@ -160,6 +161,8 @@ bool AssetLoader::OpenAsset(const std::string& path)
     FilePtr = fopen(FilePath.c_str(), "r");
     if (!FilePtr)
         FileOpenStatus = EXIT_FAILURE;
+    else
+        FileOpenStatus = 0;
 
     if (FileOpenStatus)
     {

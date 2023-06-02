@@ -5,8 +5,10 @@
 //  An abstract asset can only be used to load asset-specific data into asset instance.
 class AssetInterface
 {
+protected:
     std::string         Name;
     HashType            NameHash;
+    size_t              DataSize;
 
 public:
     virtual         ~AssetInterface() {};
@@ -16,6 +18,11 @@ public:
     {
         Name = name;
         NameHash = xxh64::hash(name.c_str(), name.length(), 0);
+    }
+
+    inline void     SetDataSize(const size_t size)
+    {
+        DataSize = size;
     }
 
     template <class C>

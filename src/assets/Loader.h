@@ -2,19 +2,23 @@
 
 #include "Generic.h"
 
+//  When adding a new type of 'asset' don't forget to put it into 'eAssetType' enumeration, but also into 'AssetPathPrefix'.
+//  Also, don't forget to modify the 'switch' statement in AssetInterfaceFactory to account for your new AssetType.
 enum class eAssetType : HashType
 {
     TEXT = xxh64::hash("text", 4, 0),
     GFX = xxh64::hash("gfx", 3, 0),
     SOUND = xxh64::hash("sound", 5, 0),
-    SCRIPT = xxh64::hash("script", 6, 0)
+    SCRIPT = xxh64::hash("script", 6, 0),
+    SCENE = xxh64::hash("scene", 5, 0)
 };
 
 static const std::unordered_map<eAssetType, std::string> AssetPathPrefix =
 {
     { eAssetType::TEXT, "text/" },
     { eAssetType::GFX,  "gfx/" },
-    { eAssetType::SOUND, "sound/" }
+    { eAssetType::SOUND, "sound/" },
+    { eAssetType::SCENE, "scenes/" }
 };
 
 static const std::string AssetBaseDir = "./assets/";

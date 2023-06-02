@@ -41,13 +41,21 @@ add_subdirectory("thirdparty/jsoncpp/")
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
 target_sources(MyTextGame PRIVATE "src/MyTextGame.cpp")
+
+#  Assets
 target_sources(MyTextGame PRIVATE "src/assets/Loader.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/TextAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/GfxAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/SoundAsset.cpp")
+target_sources(MyTextGame PRIVATE "src/assets/SceneAsset.cpp")
+
+#   Scripting
 target_sources(MyTextGame PRIVATE "src/scripting/ScriptFunctions.cpp")
-target_sources(MyTextGame PRIVATE "src/scene/SceneLoader.cpp")
+
+#   Input
 target_sources(MyTextGame PRIVATE "src/input/IInput.cpp")
+
+#   Render
 target_sources(MyTextGame PRIVATE "src/render/Gfx.cpp")
 
 if (TARGET SDL3::SDL3_main)

@@ -3,6 +3,7 @@
 #include "TextAsset.h"
 #include "GfxAsset.h"
 #include "SoundAsset.h"
+#include "SceneAsset.h"
 
 //  This handles AssetInterface creation with appropriate class selected.
 class AssetInterfaceFactory
@@ -22,6 +23,8 @@ public:
         case eAssetType::SOUND:
             return new SoundAsset;
             break;
+        case eAssetType::SCENE:
+            return new SceneAsset;
         default:
             return nullptr;
             break;
