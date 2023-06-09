@@ -10,27 +10,32 @@
 //	script = 0xcf7e685ca7386f66 14951502560068398950
 //	scene = 0x34ebd9f0e7011c68 3813381138190244968
 
+struct EntityReferenceData
+{
+    uint64_t    Id;
+    std::string Name;
+    eAssetType  Type;
+    vec3f       Position;
+    uint32_t    Width;
+    uint32_t    Height;
+    uint32_t    Order;
+    std::string SourceAsset;
+    uint64_t    ParentId;
+
+    AssetInterface* Asset;
+};
+
+struct ScriptReferenceData
+{
+    uint64_t    Id;
+    std::string Name;
+    std::string SourceAsset;
+
+    AssetInterface* Asset;
+};
+
 class SceneAsset : public AssetInterface
 {
-    struct EntityReferenceData
-    {
-        uint64_t    Id;
-        std::string Name;
-        eAssetType  Type;
-        vec3f       Position;
-        uint32_t    Width;
-        uint32_t    Height;
-        uint32_t    Order;
-        std::string SourceAsset;
-        uint64_t    ParentId;
-    };
-
-    struct ScriptReferenceData
-    {
-        uint64_t    Id;
-        std::string SourceAsset;
-    };
-
 private:
     Json::Value     RootValue;
     uint32_t        EntitiesIncluded;
@@ -44,4 +49,16 @@ public:
 
     virtual         ~SceneAsset();
     virtual void    ParseData(const uint8_t* data) override;
+
+    inline const std::vector<ScriptReferenceData>&   GetScripts() const
+    {
+        return Scripts;
+    }
+    inline const std::vector<EntityReferenceData>&  GetEntities() const
+    {
+        return Entities;
+    }
+
+    static std::vector<SceneAsset*>     ScenesList;
+    static std::string                  ActiveScene;
 };

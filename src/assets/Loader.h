@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Generic.h"
+#include "AssetInterface.h"
 
 //  When adding a new type of 'asset' don't forget to put it into 'eAssetType' enumeration, but also into 'AssetPathPrefix'.
 //  Also, don't forget to modify the 'switch' statement in AssetInterfaceFactory to account for your new AssetType.
@@ -18,21 +19,21 @@ static const std::unordered_map<eAssetType, std::string> AssetPathPrefix =
     { eAssetType::TEXT, "text/" },
     { eAssetType::GFX,  "gfx/" },
     { eAssetType::SOUND, "sound/" },
-    { eAssetType::SCENE, "scenes/" }
+    { eAssetType::SCENE, "scenes/" },
+    { eAssetType::SCRIPT, "scripts/" }
 };
 
 static const std::string AssetBaseDir = "./assets/";
 
-class AssetInterface;
-
 class AssetLoader
 {
+private:
     FileErrorType   FileOpenStatus;
-    std::string FilePath;
-    std::string FileName;
-    FILE       *FilePtr;
-    uint8_t    *FileDataBuffer;
-    long        FileSize;
+    std::string     FilePath;
+    std::string     FileName;
+    FILE           *FilePtr;
+    uint8_t        *FileDataBuffer;
+    long            FileSize;
 
     eAssetType      AssetType;
     HashType        AssetTypeHash;
@@ -55,6 +56,23 @@ public:
 
     bool            OpenAsset(const std::string& path);
     bool            CloseAsset();
+
+    static std::vector<AssetInterface*>     Assets;
+
+    static inline void Shutdown()
+    {
+        uint32_t assetsFreed = 0;
+        for (uint32_t i = 0; i < Assets.size(); ++i)
+        {
+            if (Assets[i])
+            {
+                assetsFreed++;
+                delete Assets[i];
+            }
+        }
+
+        std::cout << LOGGER_TAG << "Unloaded " << assetsFreed << " assets." << std::endl;
+    }
 
     static inline AssetLoader& GetInstance()
     {
@@ -88,5 +106,5 @@ public:
     }
 
     //  Open data file and instantiate all assets that are within.
-    static void ParseDataFile(const std::string dataFilePath, std::vector<AssetInterface*>& assets);
+    static bool ParseDataFile(const std::string dataFilePath);
 };

@@ -1,6 +1,9 @@
 #include "SceneAsset.h"
-
+#include "AssetInterfaceFactory.h"
 #include <fstream>
+
+std::vector<SceneAsset*> SceneAsset::ScenesList = {};
+std::string SceneAsset::ActiveScene = {};
 
 const Json::Value& SceneAsset::GetSectionValue(const std::string& sectionName) const
 {
@@ -45,12 +48,28 @@ void SceneAsset::ParseData(const uint8_t* data)
         const Json::Value& currentValue = RootValue["menu"][index];
         const auto assetType = (eAssetType)currentValue["type"].asUInt64();
 
+        AssetLoader& loader = AssetLoader::GetInstance();
+        if (!loader.OpenAsset(currentValue["source"].asCString()))
+            continue;
+
+        //  Process asset data and add it to the list.
+        AssetInterface* asset = AssetInterfaceFactory::Create(loader.GetAssetType());
+        loader.SetAssetRef(asset);
+        asset->ParseData(loader.GetDataBufferPtr());
+
+        AssetLoader::Assets.push_back(asset);
+
         //  Scripts go into their own list.
         if (assetType == eAssetType::SCRIPT)
         {
+            const std::string_view sourceName = currentValue["source"].asCString();
+            const size_t scriptNameOffset = sourceName.find_last_of("/") + 1;
+
             ScriptReferenceData tempScriptEntity = {
                 currentValue["id"].asUInt64(),
-                currentValue["source"].asCString()
+                sourceName.substr(scriptNameOffset, sourceName.size() - scriptNameOffset).data(),
+                sourceName.data(),
+                asset
             };
 
             Scripts.push_back(tempScriptEntity);
@@ -69,7 +88,8 @@ void SceneAsset::ParseData(const uint8_t* data)
             currentValue["height"].asUInt(),
             currentValue["order"].asUInt(),
             currentValue["source"].asCString(),
-            currentValue["parent"].asUInt()
+            currentValue["parent"].asUInt(),
+            asset
         };
 
         Entities.push_back(tempRefEntity);

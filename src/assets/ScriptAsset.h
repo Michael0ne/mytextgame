@@ -1,10 +1,11 @@
 #pragma once
-
 #include "AssetInterface.h"
 
 class ScriptAsset : public AssetInterface
 {
 private:
+    std::vector<std::string>    Functions;
+    bool                        HasMainFunction = false;
 
 public:
     ScriptAsset();

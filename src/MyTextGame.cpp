@@ -9,10 +9,10 @@
 #include "GamepadInput.h"
 #include "Gfx.h"
 #include "AssetInterfaceFactory.h"
+#include "ScriptFunctions.h"
 
 //  ASSETS
 static AssetLoader& AssetLoaderInstance = AssetLoader::GetInstance();
-static std::vector<AssetInterface*> AssetsList;
 static const std::string dataFileName = "files.dat";
 
 //  SDL
@@ -29,29 +29,6 @@ static InputInterface* InputInstance = nullptr;
 //  GFX
 static Gfx& GfxInstance = Gfx::GetInstance();
 static uint32_t ScreenResolution[2] = { 800, 600 };
-
-bool InstantiateAssets()
-{
-    AssetLoader::ParseDataFile(dataFileName, AssetsList);
-
-    // return AssetsList.size() > 0;
-    return true;
-}
-
-uint32_t UnloadAssets()
-{
-    uint32_t assetsFreed = 0;
-    for (uint32_t i = 0; i < AssetsList.size(); ++i)
-    {
-        if (AssetsList[i])
-        {
-            assetsFreed++;
-            delete AssetsList[i];
-        }
-    }
-
-    return assetsFreed;
-}
 
 void AudioCallback(void* userdata, Uint8* stream, int len)
 {
@@ -125,7 +102,12 @@ bool LoadSettings()
 {
     Settings::Open("settings.txt");
 
-    return Settings::IsOpen();
+    if (!Settings::IsOpen())
+        return false;
+
+    SceneAsset::ActiveScene = Settings::GetValue("scene", std::string());
+
+    return true;
 }
 
 bool InitInput()
@@ -181,9 +163,15 @@ bool InitGame()
         return false;
     }
 
-    if (!InstantiateAssets())
+    if (!AssetLoader::ParseDataFile(dataFileName))
     {
         std::cout << LOGGER_TAG << "InstantiateAssets failed!" << std::endl;
+        return false;
+    }
+
+    if (!ScriptEngine::Start())
+    {
+        std::cout << LOGGER_TAG << "ScriptEngine::Start failed!" << std::endl;
         return false;
     }
 
@@ -194,9 +182,10 @@ void UnInitGame()
 {
     TimerScoped timer([](const TimerDurationType& duration) { std::cout << LOGGER_TAG << "UnInitGame done! Took " << duration << std::endl; });
 
+    ScriptEngine::Stop();
     delete InputInstance;
     Settings::Shutdown();
-    UnloadAssets();
+    AssetLoader::Shutdown();
     UnInitSDL();
 }
 
@@ -210,6 +199,8 @@ void UpdateLogic(const float delta)
     //  ESCAPE to exit application.
     if (InputInstance->KeyPressed(SDL_SCANCODE_ESCAPE))
         QuitRequested = true;
+
+    ScriptEngine::Update(delta);
 }
 
 void UpdateGfx(SDL_Renderer* renderer, const float delta)

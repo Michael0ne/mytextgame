@@ -25,7 +25,7 @@ set_target_properties(MyTextGame
 target_include_directories(MyTextGame PRIVATE "src/")
 target_include_directories(MyTextGame PRIVATE "src/assets/")
 target_include_directories(MyTextGame PRIVATE "src/scripting/")
-target_include_directories(MyTextGame PRIVATE "src/scene/")
+target_include_directories(MyTextGame PRIVATE "src/entities/")
 target_include_directories(MyTextGame PRIVATE "src/audio/")
 target_include_directories(MyTextGame PRIVATE "src/render/")
 target_include_directories(MyTextGame PRIVATE "src/system/")
@@ -48,6 +48,7 @@ target_sources(MyTextGame PRIVATE "src/assets/TextAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/GfxAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/SoundAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/SceneAsset.cpp")
+target_sources(MyTextGame PRIVATE "src/assets/ScriptAsset.cpp")
 
 #   Scripting
 target_sources(MyTextGame PRIVATE "src/scripting/ScriptFunctions.cpp")

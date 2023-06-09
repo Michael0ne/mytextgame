@@ -6,6 +6,7 @@
 #include <fstream>
 
 AssetLoader AssetLoader::Instance;
+std::vector<AssetInterface*>    AssetLoader::Assets;
 
 AssetLoader::AssetLoader()
 {
@@ -36,7 +37,7 @@ bool AssetLoader::CloseAsset()
     return true;
 }
 
-void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<AssetInterface*>& assets)
+bool AssetLoader::ParseDataFile(const std::string dataFilePath)
 {
     AssetLoader& instance = GetInstance();
 
@@ -46,7 +47,7 @@ void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<Asse
     if (!dataFileStream.is_open())
     {
         std::cout << LOGGER_TAG << "Can't open " << dataFilePath << std::endl;
-        return;
+        return false;
     }
 
     std::cout << LOGGER_TAG << "Reading DATA \"" << dataFilePath << "\"" << std::endl;
@@ -70,7 +71,7 @@ void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<Asse
             if (!strncmp(buffer.c_str() + 1, "include", 7))
             {
                 std::cout << LOGGER_TAG << "Parsing include \"" << (buffer.c_str() + 9) << "\"" << std::endl;
-                ParseDataFile(buffer.c_str() + 9, assets);
+                ParseDataFile(buffer.c_str() + 9);
                 continue;
             }
 
@@ -90,12 +91,17 @@ void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<Asse
         if (!instance.OpenAsset(buffer))
             continue;
 
+        //  NOTE: this function is referenced in "Scene" asset loader.
+        //  TODO: modify this to account for asset reference duplication and don't load it more than once.
         //  Process asset data and add it to the list.
         AssetInterface* asset = AssetInterfaceFactory::Create(instance.GetAssetType());
         instance.SetAssetRef(asset);
         asset->ParseData(instance.GetDataBufferPtr());
 
-        assets.push_back(asset);
+        Assets.push_back(asset);
+
+        if (instance.GetAssetType() == eAssetType::SCENE)
+            SceneAsset::ScenesList.push_back((SceneAsset*)asset);
 
         instance.CloseAsset();
 
@@ -103,6 +109,8 @@ void AssetLoader::ParseDataFile(const std::string dataFilePath, std::vector<Asse
     }
 
     std::cout << LOGGER_TAG << "Reading DATA done. " << linesRead << " lines, " << filesRead << " file references." << std::endl;
+
+    return true;
 }
 
 const FileErrorType AssetLoader::GetError() const
@@ -154,16 +162,12 @@ bool AssetLoader::OpenAsset(const std::string& path)
     }
     catch (std::out_of_range& exception)
     {
+        UNREFERENCED_PARAMETER(exception);
         std::cout << LOGGER_TAG << "Error: unknown asset type \"" << assetType << "\"" << std::endl;
         return false;
     }
 
-    FilePtr = fopen(FilePath.c_str(), "r");
-    if (!FilePtr)
-        FileOpenStatus = EXIT_FAILURE;
-    else
-        FileOpenStatus = 0;
-
+    FileOpenStatus = fopen_s(&FilePtr, FilePath.c_str(), "r");
     if (FileOpenStatus)
     {
         std::cout << LOGGER_TAG "Can't open \"" << FilePath << "\"!" << std::endl;

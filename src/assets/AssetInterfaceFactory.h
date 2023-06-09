@@ -4,6 +4,7 @@
 #include "GfxAsset.h"
 #include "SoundAsset.h"
 #include "SceneAsset.h"
+#include "ScriptAsset.h"
 
 //  This handles AssetInterface creation with appropriate class selected.
 class AssetInterfaceFactory
@@ -16,18 +17,16 @@ public:
         {
         case eAssetType::TEXT:
             return new TextAsset;
-            break;
         case eAssetType::GFX:
             return new GfxAsset;
-            break;
         case eAssetType::SOUND:
             return new SoundAsset;
-            break;
         case eAssetType::SCENE:
             return new SceneAsset;
+        case eAssetType::SCRIPT:
+            return new ScriptAsset;
         default:
             return nullptr;
-            break;
         }
     }
 };
