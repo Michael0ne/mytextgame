@@ -14,6 +14,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 
 set(JSONCPP_WITH_TESTS OFF)
 set(JSONCPP_WITH_EXAMPLE OFF)
+set(SDL_SHARED OFF)
+set(SDL_TEST OFF)
+set(SDL_STATIC ON)
 
 set_target_properties(MyTextGame
     PROPERTIES
@@ -30,13 +33,14 @@ target_include_directories(MyTextGame PRIVATE "src/audio/")
 target_include_directories(MyTextGame PRIVATE "src/render/")
 target_include_directories(MyTextGame PRIVATE "src/system/")
 target_include_directories(MyTextGame PRIVATE "src/input/")
+target_include_directories(MyTextGame PRIVATE "src/debug/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/xxhashct")
 target_include_directories(MyTextGame PRIVATE "thirdparty/SDL/include/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/jsoncpp/include/json/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/imgui/")
 
-add_subdirectory("thirdparty/SDL/")
-add_subdirectory("thirdparty/jsoncpp/")
+add_subdirectory(thirdparty/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(thirdparty/jsoncpp)
 
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
@@ -59,27 +63,26 @@ target_sources(MyTextGame PRIVATE "src/input/IInput.cpp")
 #   Render
 target_sources(MyTextGame PRIVATE "src/render/Gfx.cpp")
 
-if (TARGET SDL3::SDL3_main)
-    target_link_libraries(MyTextGame PRIVATE SDL3::SDL3_main)
-endif()
+#   Debug UI
+target_sources(MyTextGame PRIVATE "src/debug/DebugUI.cpp")
+
+#   ImGUI external sources for native implementation.
+target_sourceS(MyTextGame PRIVATE "thirdparty/imgui/imgui.cpp")
+target_sourceS(MyTextGame PRIVATE "thirdparty/imgui/imgui_draw.cpp")
+target_sourceS(MyTextGame PRIVATE "thirdparty/imgui/imgui_tables.cpp")
+target_sourceS(MyTextGame PRIVATE "thirdparty/imgui/imgui_widgets.cpp")
+target_sources(MyTextGame PRIVATE "thirdparty/imgui/backends/imgui_impl_sdl3.cpp")
+target_sources(MyTextGame PRIVATE "thirdparty/imgui/backends/imgui_impl_sdlrenderer3.cpp")
+
 target_link_libraries(MyTextGame PRIVATE SDL3::SDL3)
 
 target_link_libraries(MyTextGame PRIVATE "jsoncpp_static")
 
-set(CMAKE_BUILD_PARALLEL_LEVEL 4)
+set(CMAKE_BUILD_PARALLEL_LEVEL 10)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MyTextGame PROPERTY CXX_STANDARD 20)
 endif()
-
-# For SDL - after build is finished, copy output DLL into main project's bin directory.
-add_custom_command(
-    TARGET MyTextGame
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        $<TARGET_FILE:SDL3>
-        $<TARGET_FILE_DIR:MyTextGame>/$<TARGET_FILE_NAME:SDL3>
-)
 
 # Setup testing project.
 add_subdirectory("thirdparty/googletest")

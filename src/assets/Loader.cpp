@@ -64,6 +64,11 @@ bool AssetLoader::ParseDataFile(const std::string dataFilePath)
 
         linesRead++;
 
+        //  Skip empty line.
+        //  This is done after 'lines read' is incremented, to correctly report errors placement.
+        if (!buffer.length())
+            continue;
+
         //  If it's directive.
         if (buffer[0] == '#')
         {
@@ -88,6 +93,23 @@ bool AssetLoader::ParseDataFile(const std::string dataFilePath)
             }
         }
 
+        //  Information for the engine.
+        if (buffer.starts_with("info:"))
+        {
+            auto infoTokenType = buffer.substr(buffer.find_first_of(':') + 1);
+            const auto infoTokenValue = infoTokenType.substr(infoTokenType.find_first_of(' ') + 1);
+            infoTokenType = infoTokenType.substr(0, infoTokenType.find_first_of(' '));
+
+            //  Figure out what 'info' token that was and set the engine's hint.
+            if (infoTokenType == "activescene")
+            {
+                //  Set engine's active scene.
+                SceneAsset::ActiveScene = infoTokenValue;
+                std::cout << LOGGER_TAG << "Set \"Active Scene\" to \"" << SceneAsset::ActiveScene << "\"." << std::endl;
+                continue;
+            }
+        }
+
         if (!instance.OpenAsset(buffer))
             continue;
 
@@ -97,6 +119,14 @@ bool AssetLoader::ParseDataFile(const std::string dataFilePath)
         AssetInterface* asset = AssetInterfaceFactory::Create(instance.GetAssetType());
         instance.SetAssetRef(asset);
         asset->ParseData(instance.GetDataBufferPtr());
+
+        //  Don't add this script asset if there was an error when parsing script.
+        if (instance.GetAssetType() == eAssetType::SCRIPT && asset->CastTo<ScriptAsset>().GetErrorsFound())
+        {
+            instance.CloseAsset();
+            filesRead++;
+            continue;
+        }
 
         Assets.push_back(asset);
 

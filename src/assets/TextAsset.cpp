@@ -10,6 +10,7 @@ TextAsset::~TextAsset()
 
 void TextAsset::ParseData(const uint8_t* data)
 {
+    //  TODO: replace with std::getline.
     char* currentToken = nullptr;
 
     currentToken = strtok((char*)data, "\n");

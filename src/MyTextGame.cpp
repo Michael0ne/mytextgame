@@ -13,7 +13,7 @@
 
 //  ASSETS
 static AssetLoader& AssetLoaderInstance = AssetLoader::GetInstance();
-static const std::string dataFileName = "files.dat";
+static const std::string dataFileName = "startup.dat";
 
 //  SDL
 static SDL_Window* GameWindow = nullptr;
@@ -30,13 +30,27 @@ static InputInterface* InputInstance = nullptr;
 static Gfx& GfxInstance = Gfx::GetInstance();
 static uint32_t ScreenResolution[2] = { 800, 600 };
 
-void AudioCallback(void* userdata, Uint8* stream, int len)
+//  DebugUI
+namespace DebugUI
 {
+    extern bool Init(SDL_Window* SDLWindow, SDL_Renderer* SDLRenderer);
+    extern void Update(const float_t delta);
+    extern void UnInit();
+}
+
+//  ImGUI
+extern bool ImGui_ImplSDL3_ProcessEvent(const SDL_Event*);
+
+void SDLCALL AudioCallBack(void* userdata, SDL_AudioStream* stream, int additional_amount, int total_amount)
+{
+
 }
 
 bool InitSDL()
 {
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    constexpr auto SDLInitFlags = SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD | SDL_INIT_EVENTS;
+
+    if (SDL_Init(SDLInitFlags) < 0)
     {
         std::cout << LOGGER_TAG << "Init error : " << SDL_GetError() << std::endl;
         return false;
@@ -50,10 +64,34 @@ bool InitSDL()
         ScreenResolution[1] = heightCustom;
     }
 
-    GameWindow = SDL_CreateWindow("Example", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ScreenResolution[0], ScreenResolution[1], 0);
+    SDL_PropertiesID windowProperties = SDL_CreateProperties();
+    SDL_SetStringProperty(windowProperties, SDL_PROP_WINDOW_CREATE_TITLE_STRING, "Application");
+    SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_X_NUMBER, SDL_WINDOWPOS_CENTERED);
+    SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED);
+    SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, ScreenResolution[0]);
+    SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, ScreenResolution[1]);
+    SDL_GetNumberProperty(windowProperties, "flags", SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
+    GameWindow = SDL_CreateWindowWithProperties(windowProperties);
+    SDL_DestroyProperties(windowProperties);
     if (!GameWindow)
     {
         std::cout << LOGGER_TAG << "Window create error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    const SDL_AudioSpec spec = { SDL_AUDIO_S32, 2, 44100 };
+    SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &spec, AudioCallBack, nullptr);
+    if (!stream)
+    {
+        std::cout << LOGGER_TAG << "Can't obtain audio device! " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    GameRenderer = SDL_CreateRenderer(GameWindow, NULL, SDL_RENDERER_ACCELERATED);
+    if (!GameRenderer)
+    {
+        std::cout << LOGGER_TAG << "Can't create renderer! " << SDL_GetError() << std::endl;
         return false;
     }
 
@@ -64,24 +102,9 @@ bool InitSDL()
         return false;
     }
 
-    SDL_AudioSpec DesiredAudioSpec, ActualAudioSpec;
-    DesiredAudioSpec.freq = 48100;
-    DesiredAudioSpec.format = AUDIO_F32;
-    DesiredAudioSpec.channels = 2;
-    DesiredAudioSpec.samples = 4096;
-    DesiredAudioSpec.callback = AudioCallback;
-
-    GameAudioDeviceId = SDL_OpenAudioDevice(nullptr, 0, &DesiredAudioSpec, &ActualAudioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
-    if (!GameAudioDeviceId)
+    if (!DebugUI::Init(GameWindow, GameRenderer))
     {
-        std::cout << LOGGER_TAG << "Can't obtain audio device! " << SDL_GetError() << std::endl;
-        return false;
-    }
-
-    GameRenderer = SDL_CreateRenderer(GameWindow, NULL, 0);
-    if (!GameRenderer)
-    {
-        std::cout << LOGGER_TAG << "Can't create renderer! " << SDL_GetError() << std::endl;
+        std::cout << LOGGER_TAG << "Can't init DebugUI!" << std::endl;
         return false;
     }
 
@@ -90,7 +113,8 @@ bool InitSDL()
 
 void UnInitSDL()
 {
-    SDL_CloseAudioDevice(GameAudioDeviceId);
+    //SDL_CloseAudioDevice(GameAudioDeviceId);
+    SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT);
     SDL_DestroyRenderer(GameRenderer);
     SDL_DestroyWindow(GameWindow);
     SDL_Quit();
@@ -123,14 +147,50 @@ bool InitInput()
 
 bool InitGfx()
 {
-    SDL_SysWMinfo sysWMinfo = {};
-    SDL_GetWindowWMInfo(GameWindow, &sysWMinfo, SDL_SYSWM_CURRENT_VERSION);
-
 #ifdef __linux__
-    return GfxInstance.Init(sysWMinfo.info.wl.display, ScreenResolution[0], ScreenResolution[1]);
+    const
+        char* videoDriver = SDL_GetCurrentVideoDriver(),
+        bool isX11 = (videoDriver[0] == 'x' && videoDriver[1] == '1' && videoDriver[2] == '1'),
+        bool isWayland = (videoDriver[0] == 'w' && videoDriver[1] == 'a');
+
+    if (isX11)
+    {
+        Display* xdisplay = (Display*)SDL_GetProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
+        Window xwindow = (Window)SDL_GetNumberProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+        if (xdisplay && xwindow) {
+            std::cout << LOGGER_TAG << "Initializing Gfx for X11..." << std::endl;
+
+            return GfxInstance.Init(xwindow, ScreenResolution[0], ScreenResolution[1]);
+        }
+
+        return false;
+    }
+
+    if (isWayland)
+    {
+        struct wl_display* display = (struct wl_display*)SDL_GetProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL);
+        struct wl_surface* surface = (struct wl_surface*)SDL_GetProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
+        HWND wlndWindow = NULL; //  TODO: window handle for wayland?
+        if (display && surface) {
+            std::cout << LOGGER_TAG << "Initializing Gfx for Wayland..." << std::endl;
+
+            return GfxInstance.Init(wlndWindow, ScreenResolution[0], ScreenResolution[1]);
+        }
+
+        return false;
+    }
+
+    return false;
+
 #elif WIN32
-    return GfxInstance.Init(sysWMinfo.info.win.window, ScreenResolution[0], ScreenResolution[1]);
+    const HWND windowsHWND = (HWND)SDL_GetProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
+
+    std::cout << LOGGER_TAG << "Initializing Gfx for Win32..." << std::endl;
+
+    return GfxInstance.Init(windowsHWND, ScreenResolution[0], ScreenResolution[1]);
 #else
+
+#pragma error("Gfx environment is not selected!");
     return false;
 #endif
 }
@@ -182,6 +242,7 @@ void UnInitGame()
 {
     TimerScoped timer([](const TimerDurationType& duration) { std::cout << LOGGER_TAG << "UnInitGame done! Took " << duration << std::endl; });
 
+    DebugUI::UnInit();
     ScriptEngine::Stop();
     delete InputInstance;
     Settings::Shutdown();
@@ -212,11 +273,9 @@ void LoopGame()
 {
     const Uint64 FrameStartTicks = SDL_GetTicks();
 
-    SDL_SetRenderDrawColor(GameRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(GameRenderer);
-
     while (SDL_PollEvent(&GameWindowEvent) != 0)
     {
+        ImGui_ImplSDL3_ProcessEvent(&GameWindowEvent);
         switch (GameWindowEvent.type)
         {
         case SDL_EVENT_QUIT:
@@ -230,8 +289,6 @@ void LoopGame()
     UpdateInput();
     UpdateLogic(FrameDelta);
     UpdateGfx(GameRenderer, FrameDelta);
-
-    SDL_RenderPresent(GameRenderer);
 }
 
 int main(const int argc, const char** argv)

@@ -30,4 +30,12 @@ public:
     {
         return static_cast<C&>(*this);
     }
+
+    const inline std::string GetName() const
+    {
+        if (Name.find_first_of('/') == std::string::npos)
+            return Name;
+
+        return Name.substr(Name.find_last_of('/') + 1);
+    }
 };

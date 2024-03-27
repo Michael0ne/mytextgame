@@ -28,7 +28,6 @@
 #define SDL_WINDOWS
 #endif
 
-#include <SDL3/SDL_syswm.h>
 #include <json.h>
 
 #include <SDL3/SDL_gamepad.h>

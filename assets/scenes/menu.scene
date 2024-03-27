@@ -1,0 +1,81 @@
+{
+	"entries": [
+		{
+			"id": 1,
+			"name": "BackgroundImage",
+			"type": 2928607471271233162,
+			"position": [ 0, 0, 0 ],
+			"width": 0,
+			"height": 0,
+			"order": 0,
+			"source": "gfx:menu/background.jpg",
+			"parent": 0
+		},
+		{
+			"id": 2,
+			"name": "GameTitleText",
+			"type": 9270267953831259986,
+			"position": [ 320, 100, 0 ],
+			"width": 0,
+			"height": 0,
+			"order": 1,
+			"source": "text:intro.txt/TitleHeader",
+			"size": 10,
+			"parent": 0
+		},
+		{
+			"id": 3,
+			"name": "StartButtonBackground",
+			"type": 2928607471271233162,
+			"position": [ 320, 140, 0 ],
+			"width": 0,
+			"height": 0,
+			"order": 1,
+			"source": "gfx:menu/buttonbackground.jpg",
+			"parent": 0
+		},
+		{
+			"id": 4,
+			"name": "StartButtonText",
+			"type": 9270267953831259986,
+			"position": [ 325, 145, 0 ],
+			"width": 0,
+			"height": 0,
+			"order": 1,
+			"source": "text:menu.txt/StartButton",
+			"parent": 3
+		},
+		{
+			"id": 5,
+			"name": "QuitButtonBackground",
+			"type": 2928607471271233162,
+			"position": [ 320, 240, 0 ],
+			"width": 0,
+			"height": 0,
+			"order": 1,
+			"source": "gfx:menu/buttonbackground.jpg",
+			"parent": 0
+		},
+		{
+			"id": 6,
+			"name": "QuitButtonText",
+			"type": 9270267953831259986,
+			"position": [ 325, 245, 0 ],
+			"width": 0,
+			"height": 0,
+			"order": 1,
+			"source": "text:menu.txt/QuitButton",
+			"parent": 5
+		},
+		{
+			"id": 7,
+			"type": 14951502560068398950,
+			"source": "script:menu/mainmenu.script"
+		},
+		{
+			"id": 8,
+			"type": 14951502560068398950,
+			"source":  "script:generic/placeholder.script"
+		}
+	]
+}

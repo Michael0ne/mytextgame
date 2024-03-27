@@ -7,6 +7,7 @@ private:
     uint32_t    Width;
     uint32_t    Height;
     WindowHandle    GfxWindowHandle;
+    uint32_t     ClearColor[3];
 
     static Gfx *Instance;
 

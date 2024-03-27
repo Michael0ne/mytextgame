@@ -34,7 +34,7 @@ void SceneAsset::ParseData(const uint8_t* data)
     }
 
     //  Update entities included value to reflect how many entities there are in scene.
-    EntitiesIncluded = RootValue["menu"].size();
+    EntitiesIncluded = RootValue["entries"].size();
 
     if (!EntitiesIncluded)
     {
@@ -45,7 +45,7 @@ void SceneAsset::ParseData(const uint8_t* data)
     //  Go through all the entities this scene includes and load them.
     for (uint32_t index = 0; index < EntitiesIncluded; index++)
     {
-        const Json::Value& currentValue = RootValue["menu"][index];
+        const Json::Value& currentValue = RootValue["entries"][index];
         const auto assetType = (eAssetType)currentValue["type"].asUInt64();
 
         AssetLoader& loader = AssetLoader::GetInstance();
@@ -56,6 +56,13 @@ void SceneAsset::ParseData(const uint8_t* data)
         AssetInterface* asset = AssetInterfaceFactory::Create(loader.GetAssetType());
         loader.SetAssetRef(asset);
         asset->ParseData(loader.GetDataBufferPtr());
+
+        //  Don't add this script asset if there was an error when parsing script.
+        if (assetType == eAssetType::SCRIPT && asset->CastTo<ScriptAsset>().GetErrorsFound())
+        {
+            loader.CloseAsset();
+            continue;
+        }
 
         AssetLoader::Assets.push_back(asset);
 
@@ -96,4 +103,6 @@ void SceneAsset::ParseData(const uint8_t* data)
 
         std::cout << LOGGER_TAG << "Entity: " << tempRefEntity.Name << std::endl;
     }
+
+    ScenesList.push_back(this);
 }
