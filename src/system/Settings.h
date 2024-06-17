@@ -1,4 +1,5 @@
 #include "Generic.h"
+#include "Logger.h"
 
 #include <fstream>
 
@@ -25,13 +26,13 @@ private:
         }
         catch (std::out_of_range e)
         {
-            std::cout << LOGGER_TAG << "Token \"" << val.c_str() + 1 << "\" (" << std::hex << tokenHash << ") has no predefined value!" << std::endl;
+            Logger::ERROR(TAG_FUNCTION_NAME, "Token \"{}\" ({}) has no predefined value!", val.c_str() + 1, tokenHash);
         }
     }
 
     void MakeDefaultSettingsFile(const std::string& fileName)
     {
-        std::cout << LOGGER_TAG << "Making a default one..." << std::endl;
+        Logger::TRACE(TAG_FUNCTION_NAME, "Making a default one...");
 
         std::ofstream outFile(fileName);
         outFile << "# generated";
@@ -53,14 +54,14 @@ private:
 
         if (fileName.empty())
         {
-            std::cout << LOGGER_TAG << "Empty filename!" << std::endl;
+            Logger::ERROR(TAG_FUNCTION_NAME, "Empty filename!");
             return;
         }
 
         File = std::ifstream(fileName);
         if (!File.is_open())
         {
-            std::cout << LOGGER_TAG << "Settings file not found!" << std::endl;
+            Logger::ERROR(TAG_FUNCTION_NAME, "Settings file not found!");
             MakeDefaultSettingsFile(fileName);
 
             File = std::ifstream(fileName);
@@ -120,7 +121,7 @@ private:
 
         outFile.close();
 
-        std::cout << LOGGER_TAG << "Saved changes!" << std::endl;
+        Logger::TRACE(TAG_FUNCTION_NAME, "Changes saved!");
     }
 
     static Settings*    Instance;
@@ -130,7 +131,7 @@ public:
     {
         Instance = new Settings(fileName);
 
-        std::cout << LOGGER_TAG << "Read " << Instance->LinesRead << " settings values" << std::endl;
+        Logger::TRACE(TAG_FUNCTION_NAME, "Read {} settings values.", Instance->LinesRead);
     }
 
     static void Shutdown()

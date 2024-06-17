@@ -1,5 +1,6 @@
 #include "Gfx.h"
 #include "DebugUI.h"
+#include "Logger.h"
 
 Gfx* Gfx::Instance;
 
@@ -21,7 +22,8 @@ void Gfx::Update(SDL_Renderer* renderer, const float delta)
 
 bool Gfx::Init(const WindowHandle windowHandle, const uint32_t width, const uint32_t height)
 {
-    std::cout << LOGGER_TAG << "Setup GFX device with resolution = " << width << " x " << height << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "Setup GFX device with resolution = {}x{}.", width, height);
+
     GfxWindowHandle = windowHandle;
     ClearColor[0] = 0;
     ClearColor[1] = 0;

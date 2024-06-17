@@ -8,8 +8,9 @@
 #include "KeyboardInput.h"
 #include "GamepadInput.h"
 #include "Gfx.h"
+#include "Logger.h"
 #include "AssetInterfaceFactory.h"
-#include "ScriptFunctions.h"
+#include "scripting/Runtime.h"
 
 //  ASSETS
 static AssetLoader& AssetLoaderInstance = AssetLoader::GetInstance();
@@ -52,7 +53,7 @@ bool InitSDL()
 
     if (SDL_Init(SDLInitFlags) < 0)
     {
-        std::cout << LOGGER_TAG << "Init error : " << SDL_GetError() << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Init error : {}", SDL_GetError());
         return false;
     }
 
@@ -76,35 +77,35 @@ bool InitSDL()
     SDL_DestroyProperties(windowProperties);
     if (!GameWindow)
     {
-        std::cout << LOGGER_TAG << "Window create error: " << SDL_GetError() << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Window create error: {}", SDL_GetError());
         return false;
     }
 
     const SDL_AudioSpec spec = { SDL_AUDIO_S32, 2, 44100 };
-    SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &spec, AudioCallBack, nullptr);
+    SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, AudioCallBack, nullptr);
     if (!stream)
     {
-        std::cout << LOGGER_TAG << "Can't obtain audio device! " << SDL_GetError() << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Can't obtain audio device! {}", SDL_GetError());
         return false;
     }
 
-    GameRenderer = SDL_CreateRenderer(GameWindow, NULL, SDL_RENDERER_ACCELERATED);
+    GameRenderer = SDL_CreateRenderer(GameWindow, NULL);
     if (!GameRenderer)
     {
-        std::cout << LOGGER_TAG << "Can't create renderer! " << SDL_GetError() << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Can't create renderer! {}", SDL_GetError());
         return false;
     }
 
     GameWindowSurface = SDL_GetWindowSurface(GameWindow);
     if (!GameWindowSurface)
     {
-        std::cout << LOGGER_TAG << "Can't obtain game window surface! " << SDL_GetError() << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Can't obtain game window surface! {}", SDL_GetError());
         return false;
     }
 
     if (!DebugUI::Init(GameWindow, GameRenderer))
     {
-        std::cout << LOGGER_TAG << "Can't init DebugUI!" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Can't init DebugUI!");
         return false;
     }
 
@@ -114,12 +115,12 @@ bool InitSDL()
 void UnInitSDL()
 {
     //SDL_CloseAudioDevice(GameAudioDeviceId);
-    SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT);
+    SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
     SDL_DestroyRenderer(GameRenderer);
     SDL_DestroyWindow(GameWindow);
     SDL_Quit();
 
-    std::cout << LOGGER_TAG << "Now uninitialized" << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "Now uninitialized");
 }
 
 bool LoadSettings()
@@ -139,7 +140,7 @@ bool InitInput()
     const std::string inputTypeSetting = Settings::GetValue("input", "keyboard");
     const HashType inputTypeSettingHash = xxh64::hash(inputTypeSetting.c_str(), inputTypeSetting.length(), 0);
 
-    std::cout << LOGGER_TAG << "InputType: " << inputTypeSetting << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "InputType: {}", inputTypeSetting);
 
     InputInstance = new InputInterface((eInputType)inputTypeSettingHash, GfxInstance.GetWindowHandle());
     return InputInstance->IsValid();
@@ -158,7 +159,7 @@ bool InitGfx()
         Display* xdisplay = (Display*)SDL_GetProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
         Window xwindow = (Window)SDL_GetNumberProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
         if (xdisplay && xwindow) {
-            std::cout << LOGGER_TAG << "Initializing Gfx for X11..." << std::endl;
+            Logger::TRACE(TAG_FUNCTION_NAME, "Initializing Gfx for X11...");
 
             return GfxInstance.Init(xwindow, ScreenResolution[0], ScreenResolution[1]);
         }
@@ -172,7 +173,7 @@ bool InitGfx()
         struct wl_surface* surface = (struct wl_surface*)SDL_GetProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
         HWND wlndWindow = NULL; //  TODO: window handle for wayland?
         if (display && surface) {
-            std::cout << LOGGER_TAG << "Initializing Gfx for Wayland..." << std::endl;
+            Logger::TRACE(TAG_FUNCTION_NAME, "Initializing Gfx for Wayland...");
 
             return GfxInstance.Init(wlndWindow, ScreenResolution[0], ScreenResolution[1]);
         }
@@ -185,7 +186,7 @@ bool InitGfx()
 #elif WIN32
     const HWND windowsHWND = (HWND)SDL_GetProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
 
-    std::cout << LOGGER_TAG << "Initializing Gfx for Win32..." << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "Initializing Gfx for Win32...");
 
     return GfxInstance.Init(windowsHWND, ScreenResolution[0], ScreenResolution[1]);
 #else
@@ -197,41 +198,41 @@ bool InitGfx()
 
 bool InitGame()
 {
-    TimerScoped timer([](const TimerDurationType& duration) { std::cout << LOGGER_TAG << "InitGame done! Took " << duration << std::endl; });
+    TimerScoped timer([](const TimerDurationType& duration) { Logger::TRACE(TAG_FUNCTION_NAME, "InitGame done! Took "); });
 
     if (!LoadSettings())
     {
-        std::cout << LOGGER_TAG << "LoadSettings failed!" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "LoadSettings failed!");
         return false;
     }
 
     if (!InitSDL())
     {
-        std::cout << LOGGER_TAG << "InitSDL failed!" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "InitSDL failed!");
         return false;
     }
 
     if (!InitGfx())
     {
-        std::cout << LOGGER_TAG << "InitGfx failed!" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "InitGfx failed!");
         return false;
     }
 
     if (!InitInput())
     {
-        std::cout << LOGGER_TAG << "InitInput failed!" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "InitInput failed!");
         return false;
     }
 
     if (!AssetLoader::ParseDataFile(dataFileName))
     {
-        std::cout << LOGGER_TAG << "InstantiateAssets failed!" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "InstantiateAssets failed!");
         return false;
     }
 
-    if (!ScriptEngine::Start())
+    if (!Scripting::Runtime::Start())
     {
-        std::cout << LOGGER_TAG << "ScriptEngine::Start failed!" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Scripting::Runtime::Start failed!");
         return false;
     }
 
@@ -240,10 +241,10 @@ bool InitGame()
 
 void UnInitGame()
 {
-    TimerScoped timer([](const TimerDurationType& duration) { std::cout << LOGGER_TAG << "UnInitGame done! Took " << duration << std::endl; });
+    TimerScoped timer([](const TimerDurationType& duration) { Logger::TRACE(TAG_FUNCTION_NAME, "UnInitGame done! Took {}", duration.count()); });
 
     DebugUI::UnInit();
-    ScriptEngine::Stop();
+    Scripting::Runtime::Stop();
     delete InputInstance;
     Settings::Shutdown();
     AssetLoader::Shutdown();
@@ -261,7 +262,7 @@ void UpdateLogic(const float delta)
     if (InputInstance->KeyPressed(SDL_SCANCODE_ESCAPE))
         QuitRequested = true;
 
-    ScriptEngine::Update(delta);
+    Scripting::Runtime::Update(delta);
 }
 
 void UpdateGfx(SDL_Renderer* renderer, const float delta)
@@ -293,13 +294,19 @@ void LoopGame()
 
 int main(const int argc, const char** argv)
 {
+    Logger::TRACE(TAG_FUNCTION_NAME, "Begin game init...");
+
     if (InitGame())
     {
         while (!QuitRequested)
             LoopGame();
     }
 
+    Logger::TRACE(TAG_FUNCTION_NAME, "Exit requested. Terminating...");
+
     UnInitGame();
+
+    Logger::TRACE(TAG_FUNCTION_NAME, "Game uninit done.");
 
     return 0;
 }

@@ -46,14 +46,14 @@ bool AssetLoader::ParseDataFile(const std::string dataFilePath)
     std::ifstream dataFileStream(dataFilePath.c_str(), std::ios::in);
     if (!dataFileStream.is_open())
     {
-        std::cout << LOGGER_TAG << "Can't open " << dataFilePath << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Can't open '{}'!", dataFilePath);
         return false;
     }
 
-    std::cout << LOGGER_TAG << "Reading DATA \"" << dataFilePath << "\"" << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "Reading DATA \"{}\"...", dataFilePath);
 
     //  Assuming file is open and good, read and instantiate all referenced assets.
-    uint32_t filesRead = 0; //  How many files we read.
+    uint32_t filesRead = 0; //  How many files we already read.
     uint32_t linesRead = 0; //  How many lines (non-comments, only data lines) we read.
     std::string buffer;
     while (std::getline(dataFileStream, buffer, '\n'))
@@ -75,7 +75,7 @@ bool AssetLoader::ParseDataFile(const std::string dataFilePath)
             //  It's an include. Open and try to parse included file.
             if (!strncmp(buffer.c_str() + 1, "include", 7))
             {
-                std::cout << LOGGER_TAG << "Parsing include \"" << (buffer.c_str() + 9) << "\"" << std::endl;
+                Logger::TRACE(TAG_FUNCTION_NAME, "Parsing include \"{}\"...", (buffer.c_str() + 9));
                 ParseDataFile(buffer.c_str() + 9);
                 continue;
             }
@@ -88,7 +88,7 @@ bool AssetLoader::ParseDataFile(const std::string dataFilePath)
                 month = atoi(buffer.substr(8, 2).c_str());
                 year = atoi(buffer.substr(10, 4).c_str());
 
-                std::cout << LOGGER_TAG << "File modified on " << day << "/" << month << "/" << year << std::endl;
+                Logger::TRACE(TAG_FUNCTION_NAME, "File modified on {}.{}.{}.", day, month, year);
                 continue;
             }
         }
@@ -105,7 +105,7 @@ bool AssetLoader::ParseDataFile(const std::string dataFilePath)
             {
                 //  Set engine's active scene.
                 SceneAsset::ActiveScene = infoTokenValue;
-                std::cout << LOGGER_TAG << "Set \"Active Scene\" to \"" << SceneAsset::ActiveScene << "\"." << std::endl;
+                Logger::TRACE(TAG_FUNCTION_NAME, "Set \"Active Scene\" to \"{}\".", SceneAsset::ActiveScene);
                 continue;
             }
         }
@@ -138,7 +138,7 @@ bool AssetLoader::ParseDataFile(const std::string dataFilePath)
         filesRead++;
     }
 
-    std::cout << LOGGER_TAG << "Reading DATA done. " << linesRead << " lines, " << filesRead << " file references." << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "Reading DATA done. Read {} lines, found {} file references.", linesRead, filesRead);
 
     return true;
 }
@@ -193,14 +193,14 @@ bool AssetLoader::OpenAsset(const std::string& path)
     catch (std::out_of_range& exception)
     {
         UNREFERENCED_PARAMETER(exception);
-        std::cout << LOGGER_TAG << "Error: unknown asset type \"" << assetType << "\"" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Error: unknown asset type \"{}\".", assetType);
         return false;
     }
 
     FileOpenStatus = fopen_s(&FilePtr, FilePath.c_str(), "r");
     if (FileOpenStatus)
     {
-        std::cout << LOGGER_TAG "Can't open \"" << FilePath << "\"!" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Can't open \"{}\".", FilePath);
         return false;
     }
 
@@ -213,7 +213,7 @@ bool AssetLoader::OpenAsset(const std::string& path)
     memset(FileDataBuffer, 0, FileSize);
     fread(FileDataBuffer, FileSize, 1, FilePtr);
 
-    std::cout << LOGGER_TAG << "File: " << FileName << " (" << FileSize << " bytes) -- OK" << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "File: {} ({} bytes) -- OK", FileName, FileSize);
 
     return true;
 }

@@ -1,4 +1,5 @@
 #include "TextAsset.h"
+#include "Logger.h"
 
 TextAsset::TextAsset()
 {
@@ -28,7 +29,7 @@ void TextAsset::ParseData(const uint8_t* data)
         currentToken = strtok(nullptr, "\n");
     }
 
-    std::cout << LOGGER_TAG << "Read " << TextValues.size() << " tokens" << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "Read {} tokens.", TextValues.size());
 }
 
 const std::string& TextAsset::GetKeyValue(const HashType keyHash) const

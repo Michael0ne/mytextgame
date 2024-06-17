@@ -2,6 +2,7 @@
 
 #include "Generic.h"
 #include "AssetInterface.h"
+#include "Logger.h"
 
 //  When adding a new type of 'asset' don't forget to put it into 'eAssetType' enumeration, but also into 'AssetPathPrefix'.
 //  Also, don't forget to modify the 'switch' statement in AssetInterfaceFactory to account for your new AssetType.
@@ -71,7 +72,7 @@ public:
             }
         }
 
-        std::cout << LOGGER_TAG << "Unloaded " << assetsFreed << " assets." << std::endl;
+        Logger::TRACE(TAG_FUNCTION_NAME, "Unloaded {} assets.", assetsFreed);
     }
 
     static inline AssetLoader& GetInstance()
@@ -96,7 +97,10 @@ public:
         if (typeSeparatorPosition == std::string::npos ||
             filenameStartPosition == std::string::npos ||
             filenameExtensionPosition == std::string::npos)
+        {
+            Logger::ERROR(TAG_FUNCTION_NAME, "Malformed path passed! Can't find required characters (: . /).");
             return;
+        }
 
         const HashType typeHash = xxh64::hash(path.data(), path.size(), 0);
         fileName = path.substr(filenameStartPosition + 1, filenameExtensionPosition - filenameStartPosition - 1);

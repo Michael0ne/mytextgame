@@ -5,6 +5,9 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("MyTextGame")
 
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+
 # Add source to this project's executable.
 add_executable (MyTextGame "src/MyTextGame.cpp" "src/MyTextGame.h")
 
@@ -17,6 +20,7 @@ set(JSONCPP_WITH_EXAMPLE OFF)
 set(SDL_SHARED OFF)
 set(SDL_TEST OFF)
 set(SDL_STATIC ON)
+set(BUILD_SHARED_LIBS ON)
 
 set_target_properties(MyTextGame
     PROPERTIES
@@ -38,9 +42,11 @@ target_include_directories(MyTextGame PRIVATE "thirdparty/xxhashct")
 target_include_directories(MyTextGame PRIVATE "thirdparty/SDL/include/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/jsoncpp/include/json/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/imgui/")
+target_include_directories(MyTextGame PRIVATE "thirdparty/fmt/include")
 
 add_subdirectory(thirdparty/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(thirdparty/jsoncpp)
+add_subdirectory(thirdparty/fmt)
 
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
@@ -55,28 +61,31 @@ target_sources(MyTextGame PRIVATE "src/assets/SceneAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/ScriptAsset.cpp")
 
 #   Scripting
-target_sources(MyTextGame PRIVATE "src/scripting/ScriptFunctions.cpp")
+target_sources(MyTextGame PRIVATE "src/scripting/Runtime.cpp")
 
 #   Input
 target_sources(MyTextGame PRIVATE "src/input/IInput.cpp")
 
 #   Render
 target_sources(MyTextGame PRIVATE "src/render/Gfx.cpp")
+target_sources(MyTextGame PRIVATE "src/render/Camera.cpp")
 
 #   Debug UI
 target_sources(MyTextGame PRIVATE "src/debug/DebugUI.cpp")
 
 #   ImGUI external sources for native implementation.
-target_sourceS(MyTextGame PRIVATE "thirdparty/imgui/imgui.cpp")
-target_sourceS(MyTextGame PRIVATE "thirdparty/imgui/imgui_draw.cpp")
-target_sourceS(MyTextGame PRIVATE "thirdparty/imgui/imgui_tables.cpp")
-target_sourceS(MyTextGame PRIVATE "thirdparty/imgui/imgui_widgets.cpp")
+target_sources(MyTextGame PRIVATE "thirdparty/imgui/imgui.cpp")
+target_sources(MyTextGame PRIVATE "thirdparty/imgui/imgui_draw.cpp")
+target_sources(MyTextGame PRIVATE "thirdparty/imgui/imgui_tables.cpp")
+target_sources(MyTextGame PRIVATE "thirdparty/imgui/imgui_widgets.cpp")
 target_sources(MyTextGame PRIVATE "thirdparty/imgui/backends/imgui_impl_sdl3.cpp")
 target_sources(MyTextGame PRIVATE "thirdparty/imgui/backends/imgui_impl_sdlrenderer3.cpp")
 
 target_link_libraries(MyTextGame PRIVATE SDL3::SDL3)
 
 target_link_libraries(MyTextGame PRIVATE "jsoncpp_static")
+
+target_link_libraries(MyTextGame PRIVATE fmt::fmt)
 
 set(CMAKE_BUILD_PARALLEL_LEVEL 10)
 

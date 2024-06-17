@@ -1,4 +1,5 @@
 #include "ScriptAsset.h"
+#include "Logger.h"
 
 ScriptAsset::ScriptAsset()
 {
@@ -74,7 +75,7 @@ void ScriptAsset::ParseData(const uint8_t* data)
 
                 if (!token.length())
                 {
-                    std::cerr << LOGGER_TAG << "Syntax Parse Error: empty argument #" << argumentIndex << " name in '" << functionName << "' function arguments list." << std::endl;
+                    Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: empty argument #{} name in '{}' function arguments list.", argumentIndex, functionName);
                     ErrorsFound++;
                     argumentIndex++;
                     continue;
@@ -82,7 +83,7 @@ void ScriptAsset::ParseData(const uint8_t* data)
 
                 if (token == "function")
                 {
-                    std::cerr << LOGGER_TAG << "Syntax Parse Error: unexpected usage of keyword as #" << argumentIndex << " '" << functionName << "' function argument." << std::endl;
+                    Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: unexpected usage of keyword as #{} '{}' function argument", argumentIndex, functionName);
                     ErrorsFound++;
                     argumentIndex++;
                     continue;
@@ -114,7 +115,7 @@ void ScriptAsset::ParseData(const uint8_t* data)
 
                 if (!token.length())
                 {
-                    std::cerr << LOGGER_TAG << "Syntax Parse Error: empty function '" << functionName << "' call argument #" << argumentIndex << ", called from '" << calleeFunctionName << "'." << std::endl;
+                    Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: empty function '{}' call argument #{}, called from {}.", functionName, argumentIndex, calleeFunctionName);
                     ErrorsFound++;
                     argumentIndex++;
                     continue;
@@ -173,7 +174,7 @@ void ScriptAsset::ParseData(const uint8_t* data)
                     }
 
                     //  That's an error if none of the above worked out.
-                    std::cerr << LOGGER_TAG << "Syntax Parse Error: unexpected token found in '" << functionName << "' function call, called from '" << calleeFunctionName << "'." << std::endl;
+                    Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: unexpected token found in '{}' function call, called from '{}'.", functionName, calleeFunctionName);
                     ErrorsFound++;
                 }
             }
@@ -190,6 +191,8 @@ void ScriptAsset::ParseData(const uint8_t* data)
 
     while (std::getline(parserDataString, currentTokenString, '\n'))
     {
+        Logger::TRACE(TAG_FUNCTION_NAME, "Token: {}", currentTokenString);
+
         if (!currentTokenString.length())
             continue;
 
@@ -207,7 +210,7 @@ void ScriptAsset::ParseData(const uint8_t* data)
             //  Can't have that inside function body.
             if (ParserState.IsFunctionBody)
             {
-                std::cerr << LOGGER_TAG << "Syntax Parse Error: unexpected include keyword found inside function body." << std::endl;
+                Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: unexpected include keyword found inside function body.");
                 ErrorsFound++;
                 return;
             }
@@ -217,7 +220,7 @@ void ScriptAsset::ParseData(const uint8_t* data)
 
             if (!quotedString.length())
             {
-                std::cerr << LOGGER_TAG << "Syntax Parse Error: empty include directive found." << std::endl;
+                Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: empty include directive found.");
                 ErrorsFound++;
                 return;
             }
@@ -232,7 +235,7 @@ void ScriptAsset::ParseData(const uint8_t* data)
             //  Can't have another function definition inside function body.
             if (ParserState.IsFunctionBody)
             {
-                std::cerr << LOGGER_TAG << "Syntax Parse Error: unexpected function keyword found inside function body." << std::endl;
+                Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: unexpected function keyword found inside function body.");
                 ErrorsFound++;
                 return;
             }
@@ -240,7 +243,7 @@ void ScriptAsset::ParseData(const uint8_t* data)
             //  Malformed function definition?
             if (currentTokenString.find_first_of('(') == std::string::npos || currentTokenString.find_first_of(')') == std::string::npos)
             {
-                std::cerr << LOGGER_TAG << "Syntax Parse Error: malformed function definition! Can't find arguments list." << std::endl;
+                Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: malformed function definition! Can't find arguments list.");
                 ErrorsFound++;
                 return;
             }
@@ -255,7 +258,7 @@ void ScriptAsset::ParseData(const uint8_t* data)
             auto argumentsString = currentTokenString.substr(currentTokenString.find_first_of('('));
             argumentsString = argumentsString.substr(1, argumentsString.find_first_of(')') - 1);
 
-            FunctionDefinition thisFunction;
+            Scripting::FunctionDefinition thisFunction;
             thisFunction.Name = functionName;
 
             ParseArgumentsList(argumentsString, functionName, thisFunction.Arguments);
@@ -296,29 +299,34 @@ void ScriptAsset::ParseData(const uint8_t* data)
             calledFunctionArguments = calledFunctionArguments.substr(0, calledFunctionArguments.find_first_of(')'));
 
             //  Check if that function exists.
-            const auto functionRef = std::find_if(Functions.begin(), Functions.end(), [&](const FunctionDefinition& f) { return f.Name == calledFunctionName; });
+            //  Actually, don't do that. The function might be declared afterwards, so let's do it after all parser stuff is done.
+            /*
+            const auto functionRef = std::find_if(Functions.begin(), Functions.end(), [&](const Scripting::FunctionDefinition& f) { return f.Name == calledFunctionName; });
             if (functionRef == std::end(Functions))
             {
-                std::cerr << LOGGER_TAG << "Syntax Parse Error: function '" << calledFunctionName << "' called from '" << ParserState.Context.FunctionName << "' was not found." << std::endl;
+                Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: function '{}' called from '{}' was not found.", calledFunctionName, ParserState.Context.FunctionName);
                 ErrorsFound++;
                 return;
             }
+            */
 
             //  Parse arguments list.
             std::vector<std::string> argumentsList;
             ParseArgumentsListCall(calledFunctionArguments, calledFunctionName, ParserState.Context.FunctionName, argumentsList);
-
+            /*
             //  Check if number of arguments that's passed in called function match the expected number of arguments for that function.
             if (argumentsList.size() != functionRef->Arguments.size())
             {
-                std::cerr << LOGGER_TAG << "Syntax Parse Error: function's '" << calledFunctionName << "' number of arguments doesn't match the function prototype, called from '" << ParserState.Context.FunctionName << "'." << std::endl;
+                Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: function's '{}' number of arguments doesn't match the function prototype, called from '{}'.", calledFunctionName, ParserState.Context.FunctionName);
                 ErrorsFound++;
                 return;
             }
+            */
 
-            auto currentFunction = std::find_if(Functions.begin(), Functions.end(), [&](const FunctionDefinition& f) { return ParserState.Context.FunctionName == f.Name; });
+            auto currentFunction = std::find_if(Functions.begin(), Functions.end(), [&](const Scripting::FunctionDefinition& f) { return ParserState.Context.FunctionName == f.Name; });
 
-            currentFunction->ControlFlow.push_back({ ControlFlowElement::FUNCTION_CALL, (size_t)std::distance(Functions.begin(), functionRef) });
+            auto item = new Scripting::FunctionCallStatement(calledFunctionName, argumentsList, 0);
+            currentFunction->ControlFlow.push_back(item);
 
             ParserState.IsFunctionCall = false;
 
@@ -336,14 +344,14 @@ void ScriptAsset::ParseData(const uint8_t* data)
             //  No condition statement?
             if (!conditionStatement.length())
             {
-                std::cerr << LOGGER_TAG << "Syntax Parse Error: function's '" << ParserState.Context.FunctionName << "' condition statement is missing it's body." << std::endl;
+                Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: function's '{}' condition statement is missing it's body.", ParserState.Context.FunctionName);
                 ErrorsFound++;
                 return;
             }
 
-            auto currentFunction = std::find_if(Functions.begin(), Functions.end(), [&](const FunctionDefinition& f) { return ParserState.Context.FunctionName == f.Name; });
+            auto currentFunction = std::find_if(Functions.begin(), Functions.end(), [&](const Scripting::FunctionDefinition& f) { return ParserState.Context.FunctionName == f.Name; });
 
-            currentFunction->ControlFlow.push_back({ ControlFlowElement::CONDITION_START, (size_t)-1 });
+            //currentFunction->ControlFlow.push_back({ Scripting::ControlFlowElement::CONDITION_START, (size_t)-1 });
 
             continue;
         }
@@ -353,9 +361,10 @@ void ScriptAsset::ParseData(const uint8_t* data)
         {
             ParserState.IsCondition = false;
 
-            auto currentFunction = std::find_if(Functions.begin(), Functions.end(), [&](const FunctionDefinition& f) { return ParserState.Context.FunctionName == f.Name; });
+            auto currentFunction = std::find_if(Functions.begin(), Functions.end(), [&](const Scripting::FunctionDefinition& f) { return ParserState.Context.FunctionName == f.Name; });
 
-            currentFunction->ControlFlow.push_back({ ControlFlowElement::CONDITION_END, (size_t)-1 });
+            auto item = new Scripting::ConditionStatement(Scripting::ControlFlowElement::CONDITION_END);
+            currentFunction->ControlFlow.push_back(item);
 
             continue;
         }
@@ -371,25 +380,27 @@ void ScriptAsset::ParseData(const uint8_t* data)
             auto varRightSide = currentTokenString.substr(equalsOpPos + 1);
             ReplaceStringInPlace(varRightSide, " ", "");
 
-            auto currentFunction = std::find_if(Functions.begin(), Functions.end(), [&](const FunctionDefinition& f) { return ParserState.Context.FunctionName == f.Name; });
+            auto currentFunction = std::find_if(Functions.begin(), Functions.end(), [&](const Scripting::FunctionDefinition& f) { return ParserState.Context.FunctionName == f.Name; });
 
             if (!varName.length() || !varRightSide.length())
             {
-                std::cerr << LOGGER_TAG << "Syntax Parse Error: malformed '" << currentFunction->Name << "' function's variable syntax." << std::endl;
+                Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: malformed '{}' function's variable syntax.", currentFunction->Name);
                 ErrorsFound++;
                 return;
             }
 
             currentFunction->Variables.push_back({ varName, varRightSide });
-            currentFunction->ControlFlow.push_back({ ControlFlowElement::VARIABLE_ASSIGNMENT, currentFunction->Variables.size() - 1 });
+
+            auto item = new Scripting::AssignmentStatement(varName, currentFunction->Variables.size() - 1, varRightSide);
+            currentFunction->ControlFlow.push_back(item);
 
             continue;
         }
 
         //  None of the above. Unknown string.
-        std::cerr << LOGGER_TAG << "Syntax Parse Error: unknown token found '" << currentTokenString << "'." << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Syntax Parse Error: unknown token found '{}'.", currentTokenString);
         ErrorsFound++;
     }
 
-    std::cout << LOGGER_TAG << "Found " << Functions.size() << " functions." << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "Found {} functions.", Functions.size());
 }

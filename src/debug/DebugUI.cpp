@@ -193,7 +193,7 @@ namespace DebugUI
 
         ImGui::Render();
 
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), gRenderer);
     }
 
     void UnInit()

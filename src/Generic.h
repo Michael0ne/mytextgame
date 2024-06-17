@@ -35,6 +35,9 @@
 #include <SDL3/SDL_keycode.h>
 #include <SDL3/SDL_mouse.h>
 
+#include <fmt/core.h>
+#include <fmt/color.h>
+
 using HashType = uint64_t;
 using FileErrorType = int32_t;
 #ifdef __linux__
@@ -43,5 +46,3 @@ using WindowHandle = wl_display*;
 using WindowHandle = HWND;
 #endif
 using KeyCodeType = SDL_Scancode;
-
-#define LOGGER_TAG "[" << __FILE__ << ":" << __func__ << ":" << __LINE__ << "] "

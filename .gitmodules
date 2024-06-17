@@ -13,3 +13,6 @@
 [submodule "thirdparty/xxhashct"]
 	path = thirdparty/xxhashct
 	url = https://github.com/ekpyron/xxhashct.git
+[submodule "thirdparty/fmt"]
+	path = thirdparty/fmt
+	url = https://github.com/fmtlib/fmt.git

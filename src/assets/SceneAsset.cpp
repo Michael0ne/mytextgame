@@ -1,5 +1,6 @@
 #include "SceneAsset.h"
 #include "AssetInterfaceFactory.h"
+#include "Logger.h"
 #include <fstream>
 
 std::vector<SceneAsset*> SceneAsset::ScenesList = {};
@@ -27,8 +28,8 @@ void SceneAsset::ParseData(const uint8_t* data)
 
     if (!reader.parse((const char*)data, (const char*)data + DataSize, RootValue))
     {
-        std::cout << LOGGER_TAG << "Failed to parse " << Name << std::endl;
-        std::cout << LOGGER_TAG << "Errors: " << reader.getFormattedErrorMessages() << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Failed to parse '{}'!", Name);
+        Logger::ERROR(TAG_FUNCTION_NAME, "Errors: {}", reader.getFormattedErrorMessages());
 
         return;
     }
@@ -38,7 +39,7 @@ void SceneAsset::ParseData(const uint8_t* data)
 
     if (!EntitiesIncluded)
     {
-        std::cout << LOGGER_TAG << "Scene file \"" << Name << "\" doesn't have any entities!" << std::endl;
+        Logger::ERROR(TAG_FUNCTION_NAME, "Scene file \"{}\" doesn't have any entities!", Name);
         return;
     }
 
@@ -81,7 +82,8 @@ void SceneAsset::ParseData(const uint8_t* data)
 
             Scripts.push_back(tempScriptEntity);
 
-            std::cout << LOGGER_TAG << "Script: " << tempScriptEntity.SourceAsset << std::endl;
+            Logger::TRACE(TAG_FUNCTION_NAME, "Script: {}", tempScriptEntity.SourceAsset);
+
             continue;
         }
 
@@ -101,7 +103,7 @@ void SceneAsset::ParseData(const uint8_t* data)
 
         Entities.push_back(tempRefEntity);
 
-        std::cout << LOGGER_TAG << "Entity: " << tempRefEntity.Name << std::endl;
+        Logger::TRACE(TAG_FUNCTION_NAME, "Entity: {}", tempRefEntity.Name);
     }
 
     ScenesList.push_back(this);

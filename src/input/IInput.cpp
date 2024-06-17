@@ -1,6 +1,7 @@
 #include "IInput.h"
 #include "KeyboardInput.h"
 #include "GamepadInput.h"
+#include "Logger.h"
 
 InputInterface::InputInterface(const eInputType inputType, const WindowHandle windowHandle)
 {
@@ -21,7 +22,7 @@ InputInterface::InputInterface(const eInputType inputType, const WindowHandle wi
         break;
     }
 
-    std::cout << LOGGER_TAG << "IsValidInstance = " << IsValidInstance << std::endl;
+    Logger::TRACE(TAG_FUNCTION_NAME, "IsValidInstance = {}.", IsValidInstance);
 }
 
 /// <summary>
