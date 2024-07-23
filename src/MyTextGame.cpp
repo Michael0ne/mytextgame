@@ -57,8 +57,8 @@ bool InitSDL()
         return false;
     }
 
-    const uint32_t widthCustom = atoi(Settings::GetValue("width", "").c_str());
-    const uint32_t heightCustom = atoi(Settings::GetValue("height", "").c_str());
+    const auto widthCustom = Settings::GetValue<uint32_t>("width", 0);
+    const auto heightCustom = Settings::GetValue<uint32_t>("height", 0);
     if (widthCustom > 0 && heightCustom > 0)
     {
         ScreenResolution[0] = widthCustom;
@@ -130,17 +130,17 @@ bool LoadSettings()
     if (!Settings::IsOpen())
         return false;
 
-    SceneAsset::ActiveScene = Settings::GetValue("scene", std::string());
+    SceneAsset::ActiveScene = Settings::GetValue<std::string>("scene", "");
 
     return true;
 }
 
 bool InitInput()
 {
-    const std::string inputTypeSetting = Settings::GetValue("input", "keyboard");
+    const std::string inputTypeSetting = Settings::GetValue<std::string>("input", "keyboard");
     const HashType inputTypeSettingHash = xxh64::hash(inputTypeSetting.c_str(), inputTypeSetting.length(), 0);
 
-    Logger::TRACE(TAG_FUNCTION_NAME, "InputType: {}", inputTypeSetting);
+    Logger::TRACE(TAG_FUNCTION_NAME, "Set input type to {}", inputTypeSetting);
 
     InputInstance = new InputInterface((eInputType)inputTypeSettingHash, GfxInstance.GetWindowHandle());
     return InputInstance->IsValid();
@@ -230,7 +230,7 @@ bool InitGame()
         return false;
     }
 
-    if (!Scripting::Runtime::Start())
+    if (!Settings::GetValue<bool>("scripts", true) || !Scripting::Runtime::Start())
     {
         Logger::ERROR(TAG_FUNCTION_NAME, "Scripting::Runtime::Start failed!");
         return false;

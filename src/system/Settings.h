@@ -127,6 +127,7 @@ private:
     static Settings*    Instance;
 
 public:
+
     static void Open(const std::string& fileName)
     {
         Instance = new Settings(fileName);
@@ -144,11 +145,29 @@ public:
         return Instance->ReadSuccessfull;
     }
 
-    static const std::string& GetValue(const std::string& key, const std::string& defValue)
+    template <typename T>
+    static const T GetValue(const std::string& key, const T defValue)
     {
         try
         {
-            return Instance->SettingsMap.at(key);
+            //  Initially, for ease of use, all values are stored as strings (so no data is lost) and any conversion is applied at programmer's will.
+            const auto intermediateValue = Instance->SettingsMap.at(key);
+
+            if constexpr (std::is_same<uint32_t, T>::value)
+                return (T)std::stoul(intermediateValue);
+
+            if constexpr (std::is_same<int32_t, T>::value)
+                return (T)std::stoi(intermediateValue);
+
+            if constexpr (std::is_same<bool, T>::value)
+                return intermediateValue == "true" ? true : false;
+
+            if constexpr (std::is_same<std::string, T>::value)
+                return intermediateValue;
+
+            Logger::ERROR(TAG_FUNCTION_NAME, "Can't find suitable conversion for requested type: {}!", typeid(T).name());
+
+            return defValue;
         }
         catch (std::out_of_range)
         {

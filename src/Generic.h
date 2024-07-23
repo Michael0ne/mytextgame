@@ -12,6 +12,7 @@
 #include <exception>
 #include <stdio.h>
 #include <list>
+#include <type_traits>
 
 #define SDL_MAIN_HANDLED
 

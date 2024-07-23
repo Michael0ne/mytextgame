@@ -172,11 +172,14 @@ bool AssetLoader::OpenAsset(const std::string& path)
     //  Check if it is so first.
     const size_t assetTypeStrColonPos = path.find_first_of(':');
     const size_t assetLastSlashPos = path.find_last_of('/');
+    const size_t extensionPos = path.find_last_of('.');
     if (assetTypeStrColonPos == std::string::npos)
         return false;
 
-    //  Set file name.
-    FileName = path.substr((assetLastSlashPos == std::string::npos ? assetTypeStrColonPos : assetLastSlashPos) + 1);
+    FileName = path.substr(assetTypeStrColonPos + 1);
+
+    if (assetLastSlashPos > extensionPos)
+        FileName = FileName.substr(0, FileName.find_first_of('/', FileName.find_last_of('.')));
 
     //  Record what asset type has been requested. Extension is not important.
     std::string assetType = path.substr(0, assetTypeStrColonPos);
@@ -188,7 +191,7 @@ bool AssetLoader::OpenAsset(const std::string& path)
     {
         FilePath = AssetBaseDir;
         FilePath += AssetPathPrefix.at(AssetType);
-        FilePath += path.substr(assetTypeStrColonPos + 1);
+        FilePath += FileName;
     }
     catch (std::out_of_range& exception)
     {
