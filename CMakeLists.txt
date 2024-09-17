@@ -38,19 +38,23 @@ target_include_directories(MyTextGame PRIVATE "src/render/")
 target_include_directories(MyTextGame PRIVATE "src/system/")
 target_include_directories(MyTextGame PRIVATE "src/input/")
 target_include_directories(MyTextGame PRIVATE "src/debug/")
+
 target_include_directories(MyTextGame PRIVATE "thirdparty/xxhashct")
 target_include_directories(MyTextGame PRIVATE "thirdparty/SDL/include/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/jsoncpp/include/json/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/imgui/")
 target_include_directories(MyTextGame PRIVATE "thirdparty/fmt/include")
+target_include_directories(MyTextGame PRIVATE "thirdparty/glm/glm")
 
 add_subdirectory(thirdparty/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(thirdparty/jsoncpp)
 add_subdirectory(thirdparty/fmt)
+add_subdirectory(thirdparty/glm)
 
 target_precompile_headers(MyTextGame PRIVATE "src/Generic.h")
 
 target_sources(MyTextGame PRIVATE "src/MyTextGame.cpp")
+target_sources(MyTextGame PRIVATE "src/system/Registry.cpp")
 
 #  Assets
 target_sources(MyTextGame PRIVATE "src/assets/Loader.cpp")
@@ -59,19 +63,24 @@ target_sources(MyTextGame PRIVATE "src/assets/GfxAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/SoundAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/SceneAsset.cpp")
 target_sources(MyTextGame PRIVATE "src/assets/ScriptAsset.cpp")
+target_sources(MyTextGame PRIVATE "src/assets/ModelAsset.cpp")
 
 #   Scripting
 target_sources(MyTextGame PRIVATE "src/scripting/Runtime.cpp")
 
 #   Input
 target_sources(MyTextGame PRIVATE "src/input/IInput.cpp")
+target_sources(MyTextGame PRIVATE "src/input/CameraController.cpp")
 
 #   Render
 target_sources(MyTextGame PRIVATE "src/render/Gfx.cpp")
 target_sources(MyTextGame PRIVATE "src/render/Camera.cpp")
 
-#   Debug UI
-target_sources(MyTextGame PRIVATE "src/debug/DebugUI.cpp")
+#   Scene graph
+target_sources(MyTextGame PRIVATE "src/entities/Scene.cpp")
+
+#   Audio
+target_sources(MyTextGame PRIVATE "src/audio/AudioWrapper.cpp")
 
 #   ImGUI external sources for native implementation.
 target_sources(MyTextGame PRIVATE "thirdparty/imgui/imgui.cpp")
@@ -86,6 +95,8 @@ target_link_libraries(MyTextGame PRIVATE SDL3::SDL3)
 target_link_libraries(MyTextGame PRIVATE "jsoncpp_static")
 
 target_link_libraries(MyTextGame PRIVATE fmt::fmt)
+
+target_link_libraries(MyTextGame PRIVATE glm::glm-header-only)
 
 set(CMAKE_BUILD_PARALLEL_LEVEL 10)
 

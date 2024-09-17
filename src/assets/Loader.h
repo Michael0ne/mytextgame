@@ -12,7 +12,8 @@ enum class eAssetType : HashType
     GFX = xxh64::hash("gfx", 3, 0),
     SOUND = xxh64::hash("sound", 5, 0),
     SCRIPT = xxh64::hash("script", 6, 0),
-    SCENE = xxh64::hash("scene", 5, 0)
+    SCENE = xxh64::hash("scene", 5, 0),
+    MODEL = xxh64::hash("model", 5, 0)
 };
 
 static const std::unordered_map<eAssetType, std::string> AssetPathPrefix =
@@ -21,7 +22,8 @@ static const std::unordered_map<eAssetType, std::string> AssetPathPrefix =
     { eAssetType::GFX,  "gfx/" },
     { eAssetType::SOUND, "sound/" },
     { eAssetType::SCENE, "scenes/" },
-    { eAssetType::SCRIPT, "scripts/" }
+    { eAssetType::SCRIPT, "scripts/" },
+    { eAssetType::MODEL, "models/" }
 };
 
 static const std::string AssetBaseDir = "./assets/";

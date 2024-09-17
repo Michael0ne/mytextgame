@@ -8,6 +8,11 @@ TEST(BasicMathTest, BasicAssertions)
     EXPECT_NE(2 * 2, 5);
 }
 
+TEST(BasicFailTest, BasicAssertions)
+{
+    EXPECT_NE(2 + 2, 5);
+}
+
 //  TODO: test GFX.
 //  TODO: test Input.
 //  TODO: test scripting.

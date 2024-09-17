@@ -1,6 +1,7 @@
 #include "Loader.h"
 #include "AssetInterface.h"
 #include "AssetInterfaceFactory.h"
+#include "Settings.h"
 
 #include <iostream>
 #include <fstream>
@@ -118,6 +119,15 @@ bool AssetLoader::ParseDataFile(const std::string dataFilePath)
         //  Process asset data and add it to the list.
         AssetInterface* asset = AssetInterfaceFactory::Create(instance.GetAssetType());
         instance.SetAssetRef(asset);
+
+        //  Skip script loading if scripts are disabled.
+        if (instance.GetAssetType() == eAssetType::SCRIPT && Settings::GetValue<bool>("scripts", true) == false)
+        {
+            instance.CloseAsset();
+            filesRead++;
+            continue;
+        }
+
         asset->ParseData(instance.GetDataBufferPtr());
 
         //  Don't add this script asset if there was an error when parsing script.

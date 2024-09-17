@@ -18,6 +18,7 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
+#include <SDL3/SDL_properties.h>
 
 #ifdef __linux__
 #include <valgrind/valgrind.h>

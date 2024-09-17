@@ -5,6 +5,7 @@
 #include "SoundAsset.h"
 #include "SceneAsset.h"
 #include "ScriptAsset.h"
+#include "ModelAsset.h"
 
 //  This handles AssetInterface creation with appropriate class selected.
 class AssetInterfaceFactory
@@ -25,6 +26,8 @@ public:
             return new SceneAsset;
         case eAssetType::SCRIPT:
             return new ScriptAsset;
+        case eAssetType::MODEL:
+            return new ModelAsset;
         default:
             return nullptr;
         }

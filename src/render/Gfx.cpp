@@ -1,6 +1,7 @@
 #include "Gfx.h"
 #include "DebugUI.h"
 #include "Logger.h"
+#include "input/CameraController.h"
 
 Gfx* Gfx::Instance;
 
@@ -9,13 +10,33 @@ namespace DebugUI
     extern void Update(const float_t delta);
 }
 
+void Gfx::RenderSampleRect()
+{
+    const auto cameraPos = CameraController::GetPosition();
+    const auto RectWidth = 100.f;
+    const auto RectHeight = 100.f;
+
+    SDL_FRect sampleRect;
+    sampleRect.x = cameraPos.X;
+    sampleRect.y = cameraPos.Y;
+
+    sampleRect.w = RectWidth;
+    sampleRect.h = RectHeight;
+
+    SDL_SetRenderDrawColor(SDLRenderer, 255, 0, 0, 0);
+    SDL_RenderRect(SDLRenderer, &sampleRect);
+}
+
 void Gfx::Update(SDL_Renderer* renderer, const float delta)
 {
+    SDLRenderer = renderer;
 
     SDL_SetRenderDrawColor(renderer, ClearColor[0], ClearColor[1], ClearColor[2], SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
 
     DebugUI::Update(delta);
+
+    RenderSampleRect();
 
     SDL_RenderPresent(renderer);
 }
@@ -31,10 +52,9 @@ bool Gfx::Init(const WindowHandle windowHandle, const uint32_t width, const uint
 
     //  Add debug stuff.
     DebugUI::AddPanel("Gfx");
-    DebugUI::TextItem::TextData textData{ "Set the clear color" };
-    DebugUI::AddPanelItem("Gfx", DebugUI::Item::TEXT, &textData);
-    DebugUI::SliderItem::SliderData sliderData{ DebugUI::SliderItem::ItemType::INT, "Clear Color", 3, ClearColor, (uint32_t)0, (uint32_t)255 };
-    DebugUI::AddPanelItem("Gfx", DebugUI::Item::SLIDER, &sliderData);
+
+    DebugUI::AddPanelItem("Gfx", DebugUI::Item::TEXT, DebugUI::TextItem::TextData("Set the clear color"));
+    DebugUI::AddPanelItem("Gfx", DebugUI::Item::SLIDER, DebugUI::SliderItem::SliderData<uint32_t>(DebugUI::SliderItem::ItemType::INT, "Clear Color", (uint32_t)3, ClearColor, (uint32_t)0, (uint32_t)255));
 
     return true;
 }

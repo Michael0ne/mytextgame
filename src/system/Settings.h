@@ -195,8 +195,8 @@ public:
     }
 };
 
-Settings* Settings::Instance = nullptr;
-std::unordered_map<HashType, std::string> Settings::PredefinedTokens =
+inline Settings* Settings::Instance = nullptr;
+inline std::unordered_map<HashType, std::string> Settings::PredefinedTokens =
 {
     { 0x0840acdf6fe13b74, "1920" },
     { 0xd93c80b41d41202f, "1080" }

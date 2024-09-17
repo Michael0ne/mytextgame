@@ -11,6 +11,8 @@
 #include "Logger.h"
 #include "AssetInterfaceFactory.h"
 #include "scripting/Runtime.h"
+#include "Scene.h"
+#include "input/CameraController.h"
 
 //  ASSETS
 static AssetLoader& AssetLoaderInstance = AssetLoader::GetInstance();
@@ -184,7 +186,7 @@ bool InitGfx()
     return false;
 
 #elif WIN32
-    const HWND windowsHWND = (HWND)SDL_GetProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
+    const HWND windowsHWND = (HWND)SDL_GetNumberProperty(SDL_GetWindowProperties(GameWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
 
     Logger::TRACE(TAG_FUNCTION_NAME, "Initializing Gfx for Win32...");
 
@@ -230,9 +232,24 @@ bool InitGame()
         return false;
     }
 
-    if (!Settings::GetValue<bool>("scripts", true) || !Scripting::Runtime::Start())
+    if (Settings::GetValue<bool>("scripts", true))
     {
-        Logger::ERROR(TAG_FUNCTION_NAME, "Scripting::Runtime::Start failed!");
+        if (!Scripting::Runtime::Start())
+        {
+            Logger::ERROR(TAG_FUNCTION_NAME, "Start script runtime failed!");
+            return false;
+        }
+    }
+
+    if (!Scene::Init())
+    {
+        Logger::ERROR(TAG_FUNCTION_NAME, "Scene init failed!");
+        return false;
+    }
+
+    if (!CameraController::Init())
+    {
+        Logger::ERROR(TAG_FUNCTION_NAME, "Camera Controller init failed!");
         return false;
     }
 
@@ -256,17 +273,20 @@ void UpdateInput()
     InputInstance->Update();
 }
 
-void UpdateLogic(const float delta)
+void UpdateLogic(const float_t delta)
 {
     //  ESCAPE to exit application.
     if (InputInstance->KeyPressed(SDL_SCANCODE_ESCAPE))
         QuitRequested = true;
 
+    CameraController::Update(InputInstance, delta);
     Scripting::Runtime::Update(delta);
+    Scene::Update(delta);
 }
 
-void UpdateGfx(SDL_Renderer* renderer, const float delta)
+void UpdateGfx(SDL_Renderer* renderer, const float_t delta)
 {
+    Scene::Render(renderer, delta);
     GfxInstance.Update(renderer, delta);
 }
 

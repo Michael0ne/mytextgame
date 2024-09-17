@@ -1,6 +1,7 @@
 #include "SceneAsset.h"
 #include "AssetInterfaceFactory.h"
 #include "Logger.h"
+#include "Settings.h"
 #include <fstream>
 
 std::vector<SceneAsset*> SceneAsset::ScenesList = {};
@@ -56,6 +57,14 @@ void SceneAsset::ParseData(const uint8_t* data)
         //  Process asset data and add it to the list.
         AssetInterface* asset = AssetInterfaceFactory::Create(loader.GetAssetType());
         loader.SetAssetRef(asset);
+
+        //  Don't load script asset if scripts are disabled.
+        if (assetType == eAssetType::SCRIPT && Settings::GetValue<bool>("scripts", true) == false)
+        {
+            loader.CloseAsset();
+            continue;
+        }
+
         asset->ParseData(loader.GetDataBufferPtr());
 
         //  Don't add this script asset if there was an error when parsing script.
