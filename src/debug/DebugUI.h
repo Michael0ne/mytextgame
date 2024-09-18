@@ -21,6 +21,7 @@ namespace DebugUI
         {
             UNSPECIFIED,
             TEXT,
+            TEXT_RAW,
             BUTTON,
             SLIDER,
         };
@@ -48,11 +49,17 @@ namespace DebugUI
         struct TextData
         {
             std::string Title;
+            char*       RawTitleStringPtr;
 
             TextData(std::string s)
-                :Title(std::move(s))
+                :Title(std::move(s)), RawTitleStringPtr(nullptr)
             {
-            };
+            }
+
+            TextData(std::string st, char* sp)
+                :Title(std::move(st)), RawTitleStringPtr(sp)
+            {
+            }
 
             ~TextData()
             {
@@ -61,15 +68,21 @@ namespace DebugUI
 
     protected:
         std::string     Title;
+        char*           RawString;
 
     public:
         virtual ~TextItem() override = default;
         virtual inline const std::string& GetTitle() const override { return Title; }
+        
+        inline const char* GetRawString() const { return RawString; }
 
-        inline TextItem(std::string title)
-            :Title(std::move(title))
+        inline TextItem(std::string title, char* rawStr = nullptr)
+            :Title(std::move(title)), RawString(rawStr)
         {
-            Type = TEXT;
+            if (rawStr)
+                Type = TEXT_RAW;
+            else
+                Type = TEXT;
         }
     };
 
@@ -230,11 +243,15 @@ namespace DebugUI
                 switch (item->GetType())
                 {
                 case Item::ItemType::TEXT:
+                case Item::ItemType::TEXT_RAW:
                 {
                     const auto itemText = reinterpret_cast<TextItem*>(item);
                     assert(itemText);
 
-                    ImGui::Text(itemText->GetTitle().c_str());
+                    if (itemText->GetRawString())
+                        ImGui::Text("%s %s", itemText->GetTitle().c_str(), itemText->GetRawString());
+                    else
+                        ImGui::Text(itemText->GetTitle().c_str());
                     break;
                 }
                 case Item::ItemType::BUTTON:
@@ -323,6 +340,12 @@ namespace DebugUI
         {
             const auto& textRef = reinterpret_cast<const TextItem::TextData&>(data);
             panelItemsRef.emplace_back(new TextItem(textRef.Title));
+            break;
+        }
+        case Item::ItemType::TEXT_RAW:
+        {
+            const auto& textRef = reinterpret_cast<const TextItem::TextData&>(data);
+            panelItemsRef.emplace_back(new TextItem(textRef.Title, textRef.RawTitleStringPtr));
             break;
         }
         case Item::ItemType::BUTTON:

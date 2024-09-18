@@ -9,7 +9,8 @@
 class CameraController
 {
 private:
-    static vec4f   Position;
+    static vec4f    Position;
+    static float_t  Velocity;
 
 public:
     static bool Init();

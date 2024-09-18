@@ -4,7 +4,8 @@
 class Scene
 {
 private:
-    std::string     Name;
+    //std::string     Name;
+    static char*    Name;
     void*           AssetPtr;
 
 public:
@@ -18,4 +19,6 @@ public:
 
     //  This will initialize a scene instance.
     static bool             Init();
+
+    static void             Shutdown();
 };
