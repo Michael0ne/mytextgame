@@ -1,17 +1,33 @@
 #include "Scene.h"
 #include "Logger.h"
 #include "assets/SceneAsset.h"
+#include "Node.h"
 
 char* Scene::Name = nullptr;
+std::vector<Node*> Scene::Nodes = {};
 
 void Scene::Update(const float_t timeDelta)
 {
-    //  TODO: update scene children.
+    if (!Nodes.size())
+        return;
+
+    for (size_t i = 0; i < Nodes.size(); i++)
+    {
+        if (Nodes[i])
+            Nodes[i]->UpdateLogic();
+    }
 }
 
 void Scene::Render(SDL_Renderer* renderer, const float_t timeDelta)
 {
-    //  TODO: call render method on every scene child.
+    if (!Nodes.size())
+        return;
+
+    for (size_t i = 0; i < Nodes.size(); i++)
+    {
+        if (Nodes[i])
+            Nodes[i]->Render();
+    }
 }
 
 bool Scene::Init()

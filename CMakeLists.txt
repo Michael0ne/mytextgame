@@ -78,6 +78,8 @@ target_sources(MyTextGame PRIVATE "src/render/Camera.cpp")
 
 #   Scene graph
 target_sources(MyTextGame PRIVATE "src/entities/Scene.cpp")
+target_sources(MyTextGame PRIVATE "src/entities/Node.cpp")
+target_sources(MyTextGame PRIVATE "src/entities/Graphic2D.cpp")
 
 #   Audio
 target_sources(MyTextGame PRIVATE "src/audio/AudioWrapper.cpp")

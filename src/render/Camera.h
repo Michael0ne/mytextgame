@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Generic.h"
 #include "Types.h"
 

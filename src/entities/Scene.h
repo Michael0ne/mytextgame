@@ -1,12 +1,17 @@
+#pragma once
+
 #include "Generic.h"
 #include "DebugUI.h"
+
+class Node;
 
 class Scene
 {
 private:
-    //std::string     Name;
-    static char*    Name;
-    void*           AssetPtr;
+    static char*            Name;
+    static void*            AssetPtr;
+
+    static std::vector<Node*>   Nodes;
 
 public:
     Scene() = default;

@@ -2,29 +2,13 @@
 #include "DebugUI.h"
 #include "Logger.h"
 #include "input/CameraController.h"
+#include "entities/Scene.h"
 
 Gfx* Gfx::Instance;
 
 namespace DebugUI
 {
     extern void Update(const float_t delta);
-}
-
-void Gfx::RenderSampleRect()
-{
-    const auto cameraPos = CameraController::GetPosition();
-    const auto RectWidth = 100.f;
-    const auto RectHeight = 100.f;
-
-    SDL_FRect sampleRect;
-    sampleRect.x = cameraPos.X;
-    sampleRect.y = cameraPos.Y;
-
-    sampleRect.w = RectWidth;
-    sampleRect.h = RectHeight;
-
-    SDL_SetRenderDrawColor(SDLRenderer, 255, 0, 0, 0);
-    SDL_RenderRect(SDLRenderer, &sampleRect);
 }
 
 void Gfx::Update(SDL_Renderer* renderer, const float delta)
@@ -35,8 +19,7 @@ void Gfx::Update(SDL_Renderer* renderer, const float delta)
     SDL_RenderClear(renderer);
 
     DebugUI::Update(delta);
-
-    RenderSampleRect();
+    Scene::Render(renderer, delta);
 
     SDL_RenderPresent(renderer);
 }

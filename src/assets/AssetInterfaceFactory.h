@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Generic.h"
 #include "Loader.h"
 #include "TextAsset.h"

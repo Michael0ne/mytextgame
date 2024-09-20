@@ -1,3 +1,4 @@
+#pragma once
 /*
 * File: Registry.h
 * Purpose: a collection of classes for all stuff related to audio engine.

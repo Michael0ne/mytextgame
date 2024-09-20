@@ -1,3 +1,4 @@
+#pragma once
 /*
 * File: DebugUI.h
 * Purpose: a complete wrapper around Dear ImGUI to visualise and assist with debugging.

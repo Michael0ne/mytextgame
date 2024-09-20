@@ -32,6 +32,9 @@ static InputInterface* InputInstance = nullptr;
 //  GFX
 static Gfx& GfxInstance = Gfx::GetInstance();
 static uint32_t ScreenResolution[2] = { 800, 600 };
+static uint64_t FrameCounter = 0;
+static uint64_t TicksCounter = 0;
+static std::string AppName{};
 
 //  DebugUI
 namespace DebugUI
@@ -68,7 +71,7 @@ bool InitSDL()
     }
 
     SDL_PropertiesID windowProperties = SDL_CreateProperties();
-    SDL_SetStringProperty(windowProperties, SDL_PROP_WINDOW_CREATE_TITLE_STRING, "Application");
+    SDL_SetStringProperty(windowProperties, SDL_PROP_WINDOW_CREATE_TITLE_STRING, AppName.c_str());
     SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_X_NUMBER, SDL_WINDOWPOS_CENTERED);
     SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED);
     SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, ScreenResolution[0]);
@@ -133,6 +136,7 @@ bool LoadSettings()
         return false;
 
     SceneAsset::ActiveScene = Settings::GetValue<std::string>("scene", "");
+    AppName = Settings::GetValue<std::string>("appname", "Application");
 
     return true;
 }
@@ -292,7 +296,7 @@ void UpdateGfx(SDL_Renderer* renderer, const float_t delta)
 
 void LoopGame()
 {
-    const Uint64 FrameStartTicks = SDL_GetTicks();
+    const auto FrameStartTicks = SDL_GetTicks();
 
     while (SDL_PollEvent(&GameWindowEvent) != 0)
     {
@@ -305,11 +309,19 @@ void LoopGame()
         }
     };
 
-    const float FrameDelta = (SDL_GetTicks() - FrameStartTicks) * 0.0001f;
+    const auto FrameDelta = (SDL_GetTicks() - FrameStartTicks) * 0.0001f;
+    const auto FPS = FrameCounter / ( (SDL_GetTicks() - TicksCounter) / 1000.f );
+
+    char titleWithFPS[256] = {};
+    sprintf(titleWithFPS, "%s (%I64u)", AppName.c_str(), (uint64_t)FPS);
+
+    SDL_SetWindowTitle(GameWindow, titleWithFPS);
 
     UpdateInput();
     UpdateLogic(FrameDelta);
     UpdateGfx(GameRenderer, FrameDelta);
+
+    FrameCounter++;
 }
 
 int main(const int argc, const char** argv)
@@ -318,6 +330,9 @@ int main(const int argc, const char** argv)
 
     if (InitGame())
     {
+        FrameCounter = 0;
+        TicksCounter = SDL_GetTicks();
+
         while (!QuitRequested)
             LoopGame();
     }

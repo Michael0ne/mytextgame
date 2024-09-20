@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Generic.h"
 
 struct GfxResource
@@ -26,16 +27,14 @@ struct GfxResource
 class Gfx
 {
 private:
-    uint32_t    Width;
-    uint32_t    Height;
+    uint32_t        Width;
+    uint32_t        Height;
     WindowHandle    GfxWindowHandle;
-    uint32_t     ClearColor[3];
+    uint32_t        ClearColor[3];
 
-    SDL_Renderer* SDLRenderer = nullptr;
+    SDL_Renderer*   SDLRenderer = nullptr;
 
     static Gfx *Instance;
-
-    void RenderSampleRect();
 
 public:
     static Gfx& GetInstance()
@@ -48,5 +47,6 @@ public:
 
     void Update(SDL_Renderer* renderer, const float delta);
     bool Init(const WindowHandle windowHandle, const uint32_t width, const uint32_t height);
+
     const WindowHandle GetWindowHandle() const;
 };
